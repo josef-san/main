@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>3D Interaktivní Kruhy</title>
+    <title>3D Objekt s Hloubkou</title>
     <style>
         body {
             margin: 0;
@@ -10,13 +10,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #1a1a1a;
+            background: #111;
             overflow: hidden;
-            font-family: sans-serif;
-            perspective: 1000px; /* Důležité pro 3D efekt */
+            font-family: 'Arial Black', sans-serif;
+            perspective: 1200px;
         }
 
-        /* Hlavní kontejner o rozměru 300x300 */
         #scene {
             width: 300px;
             height: 300px;
@@ -27,81 +26,111 @@
 
         #scene:active { cursor: grabbing; }
 
-        /* Společný styl pro kruhy */
-        .circle {
+        /* Základní prstenec */
+        .ring {
             position: absolute;
-            top: 0;
-            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        /* Trik pro hloubku: vytvoření více vrstev za sebou */
+        .layer {
+            position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 6px solid #3498db;
+            border: 10px solid #3498db; /* Středně tlustý okraj */
             box-sizing: border-box;
-            user-select: none;
+            background: transparent;
         }
 
-        /* Vnitřní kruh - trochu menší a jiná barva */
-        .inner-circle {
+        .inner-ring .layer {
             width: 70%;
             height: 70%;
             top: 15%;
             left: 15%;
-            border: 4px solid #e74c3c;
-            transform: translateZ(20px); /* Posun v prostoru */
+            border-color: #e74c3c;
         }
 
-        /* Logo/Nápis uprostřed */
-        .logo {
+        /* Styl pro text s hloubkou */
+        .logo-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        .logo-layer {
+            position: absolute;
             color: white;
-            font-weight: bold;
-            font-size: 24px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transform: translateZ(40px); /* Vystupuje nejvíce dopředu */
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            font-size: 40px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
 
 <div id="scene">
-    <div class="circle">
-        <div class="circle inner-circle">
-            <div class="logo">LOGO</div>
-        </div>
-    </div>
+    <div class="ring" id="outer"></div>
+    
+    <div class="ring inner-ring" id="inner"></div>
+
+    <div class="logo-container" id="logo"></div>
 </div>
 
 <script>
+    const outer = document.getElementById('outer');
+    const inner = document.getElementById('inner');
+    const logo = document.getElementById('logo');
+
+    // Dynamické vytvoření vrstev pro hloubku (15px tloušťka)
+    for (let i = 0; i < 15; i++) {
+        const l1 = document.createElement('div');
+        l1.className = 'layer';
+        l1.style.transform = `translateZ(${i - 7}px)`; // Rozmístění vrstev kolem středu
+        outer.appendChild(l1);
+
+        const l2 = document.createElement('div');
+        l2.className = 'layer';
+        l2.style.transform = `translateZ(${i - 7}px)`;
+        inner.appendChild(l2);
+
+        const l3 = document.createElement('div');
+        l3.className = 'logo-layer';
+        l3.textContent = 'LOGO';
+        l3.style.transform = `translateZ(${i - 7}px)`;
+        // Prostřední vrstva loga bude svítit
+        if(i === 7) l3.style.color = '#fff'; 
+        else l3.style.color = '#555'; // Boční strany budou tmavší (stín)
+        logo.appendChild(l3);
+    }
+
+    // --- Logika rotace z minulého scriptu ---
     const scene = document.getElementById('scene');
-    let targetRotationX = 0, targetRotationY = 0;
     let currentRotationX = 0, currentRotationY = 0;
-    let velocityX = 0.5, velocityY = 0.5; // Počáteční pomalá rotace
+    let velocityX = 0.8, velocityY = 0.5;
     let isDragging = false;
     let lastMouseX, lastMouseY;
 
-    // Funkce pro plynulou animaci
     function animate() {
         if (!isDragging) {
-            // Přidání setrvačnosti a tření
             currentRotationX += velocityX;
             currentRotationY += velocityY;
-            velocityX *= 0.98; // Tření - pomalu zastavuje
-            velocityY *= 0.98;
+            velocityX *= 0.97;
+            velocityY *= 0.97;
             
-            // Základní "nekonečný" pohyb, pokud je rychlost malá
-            if (Math.abs(velocityX) < 0.1) velocityX += 0.05;
-            if (Math.abs(velocityY) < 0.1) velocityY += 0.05;
+            if (Math.abs(velocityX) < 0.1) velocityX += 0.02;
+            if (Math.abs(velocityY) < 0.1) velocityY += 0.02;
         }
 
         scene.style.transform = `rotateX(${-currentRotationY}deg) rotateY(${currentRotationX}deg)`;
         requestAnimationFrame(animate);
     }
 
-    // Eventy myši
     window.addEventListener('mousedown', (e) => {
         isDragging = true;
         lastMouseX = e.clientX;
@@ -110,25 +139,17 @@
 
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        
         const deltaX = e.clientX - lastMouseX;
         const deltaY = e.clientY - lastMouseY;
-        
         velocityX = deltaX * 0.5;
         velocityY = deltaY * 0.5;
-        
         currentRotationX += velocityX;
         currentRotationY += velocityY;
-        
         lastMouseX = e.clientX;
         lastMouseY = e.clientY;
     });
 
-    window.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
-    // Spuštění animace
+    window.addEventListener('mouseup', () => isDragging = false);
     animate();
 </script>
 

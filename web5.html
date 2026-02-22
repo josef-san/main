@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Design Scroll</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .section {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            position: relative;
+            will-change: transform;
+            background: white; /* Základ pro textovou část */
+        }
+
+        /* Společný styl pro poloviny */
+        .half {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            height: 100%;
+        }
+
+        /* Textová část */
+        .text-side {
+            background: white;
+            color: #333;
+            text-align: left;
+            z-index: 2;
+        }
+
+        .text-side h2 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #111;
+        }
+
+        .text-side p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        /* Grafická/barevná část s oříznutím */
+        .visual-side {
+            position: relative;
+            z-index: 1;
+            /* Cik-cak oříznutí pomocí clip-path */
+            clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+
+        /* Variace pro sekce, kde je grafika vlevo */
+        .reverse .visual-side {
+            clip-path: polygon(0% 0%, 75% 0%, 100% 100%, 0% 100%);
+        }
+
+        /* Barvy pro grafické poloviny */
+        .s1 .visual-side { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .s2 .visual-side { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .s3 .visual-side { background: linear-gradient(135deg, #00cdac 0%, #02aab0 100%); }
+        .s4 .visual-side { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+        .s5 .visual-side { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+
+        /* Číslo sekce v pozadí grafiky */
+        .visual-side::after {
+            content: attr(data-num);
+            font-size: 15rem;
+            color: rgba(255,255,255,0.2);
+            font-weight: 900;
+        }
+
+    </style>
+</head>
+<body>
+
+    <section class="section s1" data-side="none">
+        <div class="half text-side">
+            <h2>Design 01</h2>
+            <p>Vítejte na moderním webu. Tato sekce je statická, ale ty další už budou reagovat na váš pohyb.</p>
+        </div>
+        <div class="half visual-side" data-num="1"></div>
+    </section>
+
+    <section class="section s2" data-side="left">
+        <div class="half text-side">
+            <h2>Kreativita</h2>
+            <p>Textová část je čistě bílá pro maximální čitelnost, zatímco grafika napravo vytváří dynamický kontrast.</p>
+        </div>
+        <div class="half visual-side" data-num="2"></div>
+    </section>
+
+    <section class="section s3 reverse" data-side="right">
+        <div class="half visual-side" data-num="3"></div>
+        <div class="half text-side">
+            <h2>Flexibilita</h2>
+            <p>Tato sekce má přehozené strany. Grafika je vlevo a je oříznutá pod jiným úhlem.</p>
+        </div>
+    </section>
+
+    <section class="section s4" data-side="left">
+        <div class="half text-side">
+            <h2>Barvy</h2>
+            <p>Každá sekce používá lineární gradienty, které dodávají webu hloubku a moderní vzhled.</p>
+        </div>
+        <div class="half visual-side" data-num="4"></div>
+    </section>
+
+    <section class="section s5 reverse" data-side="right">
+        <div class="half visual-side" data-num="5"></div>
+        <div class="half text-side">
+            <h2>Kontakt</h2>
+            <p>Dokončili jste cestu. Tento efekt scrollu je ideální pro storytelling nebo prezentaci portfolia.</p>
+        </div>
+    </section>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+
+        function handleScroll() {
+            const vh = window.innerHeight;
+
+            sections.forEach(sec => {
+                const side = sec.getAttribute('data-side');
+                if (side === 'none') return;
+
+                const rect = sec.getBoundingClientRect();
+                let scrollFraction = rect.top / vh;
+                scrollFraction = Math.max(0, Math.min(1, scrollFraction));
+
+                let moveX;
+                if (side === 'left') {
+                    moveX = -100 * scrollFraction;
+                } else {
+                    moveX = 100 * scrollFraction;
+                }
+
+                sec.style.transform = `translateX(${moveX}%)`;
+            });
+        }
+
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+    </script>
+</body>
+</html>

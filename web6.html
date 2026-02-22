@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Bind Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #111;
+            font-family: 'Arial', sans-serif;
+            /* Skryje vodorovný posuvník, když sekce "vykukují" z boku */
+            overflow-x: hidden; 
+        }
+
+        .section {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 5vw;
+            font-weight: 900;
+            position: relative;
+            /* Důležité pro plynulost na mobilech */
+            will-change: transform; 
+        }
+
+        /* Barvy sekcí */
+        .s1 { background: #ff416c; }
+        .s2 { background: #4776e6; }
+        .s3 { background: #00b09b; }
+        .s4 { background: #f7971e; }
+        .s5 { background: #12c2e9; }
+
+        .content {
+            text-align: center;
+            padding: 20px;
+        }
+
+        p {
+            font-size: 1.5rem;
+            font-weight: normal;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="section s1" data-side="none">
+        <div class="content">
+            <h2>SEKCE 1</h2>
+            <p>Scrolluj dolů...</p>
+        </div>
+    </section>
+
+    <section class="section s2" data-side="left">
+        <div class="content">
+            <h2>SEKCE 2</h2>
+            <p>Přijíždím zleva podle tvého scrollu</p>
+        </div>
+    </section>
+
+    <section class="section s3" data-side="right">
+        <div class="content">
+            <h2>SEKCE 3</h2>
+            <p>Já reaguji zprava</p>
+        </div>
+    </section>
+
+    <section class="section s4" data-side="left">
+        <div class="content">
+            <h2>SEKCE 4</h2>
+            <p>Opět levá strana</p>
+        </div>
+    </section>
+
+    <section class="section s5" data-side="right">
+        <div class="content">
+            <h2>SEKCE 5</h2>
+            <p>A poslední zprava</p>
+        </div>
+    </section>
+
+    <script>
+        const sections = document.querySelectorAll('.section');
+
+        function handleScroll() {
+            const vh = window.innerHeight;
+
+            sections.forEach(sec => {
+                const side = sec.getAttribute('data-side');
+                if (side === 'none') return; // První sekci necháme v klidu
+
+                // Zjistíme pozici vršku sekce vůči oknu
+                const rect = sec.getBoundingClientRect();
+                
+                // Výpočet: kolik procent sekce je pod spodním okrajem obrazovky
+                // 0 = sekce je přesně na obrazovce
+                // 1 = sekce je celá pod obrazovkou
+                let scrollFraction = rect.top / vh;
+                
+                // Omezíme hodnotu mezi 0 a 1
+                scrollFraction = Math.max(0, Math.min(1, scrollFraction));
+
+                let moveX;
+                if (side === 'left') {
+                    // Zleva: -100% když je dole, 0% když je na středu
+                    moveX = -100 * scrollFraction;
+                } else {
+                    // Zprava: 100% když je dole, 0% když je na středu
+                    moveX = 100 * scrollFraction;
+                }
+
+                sec.style.transform = `translateX(${moveX}%)`;
+            });
+        }
+
+        // Posloucháme scroll a okamžitě přepočítáváme pozici
+        window.addEventListener('scroll', handleScroll);
+        
+        // Spustíme jednou při načtení pro správné úvodní pozice
+        handleScroll();
+    </script>
+</body>
+</html>

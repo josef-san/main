@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Nekonečný Loop Bez Mezer</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: sans-serif;
+            overflow-x: hidden;
+        }
+
+        .banner-system {
+            width: 100%;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .banner-row {
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .banner-row:first-child { border-bottom: 2px solid #000; }
+        .banner-row:last-child { background-color: #111; color: #fff; }
+
+        /* Kontejner pro plynulý pohyb */
+        .logo-track {
+            display: flex;
+            width: max-content; /* Klíčové: track se roztáhne podle obsahu */
+            will-change: transform;
+        }
+
+        /* Animace */
+        .animate-left { animation: scroll-l 60s linear infinite; }
+        .animate-right { animation: scroll-r 60s linear infinite; }
+
+        .logo-item {
+            min-width: 300px; /* Široká pole */
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid #000;
+            box-sizing: border-box;
+        }
+
+        .banner-row:last-child .logo-item { border-right: 1px solid #333; }
+
+        .logo-icon { font-size: 40px; margin-bottom: 10px; }
+        .logo-name { font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Definice loopu - posouváme o přesnou polovinu tracku */
+        @keyframes scroll-l {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes scroll-r {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="banner-system">
+        <div class="banner-row">
+            <div class="logo-track animate-left" id="track-top"></div>
+        </div>
+        <div class="banner-row">
+            <div class="logo-track animate-right" id="track-bottom"></div>
+        </div>
+    </div>
+
+    <script>
+        const brands1 = [
+            { n: "Magento", i: "M" }, { n: "Shopify", i: "S" }, 
+            { n: "Wordpress", i: "W" }, { n: "Umbraco", i: "U" },
+            { n: "Sitefinity", i: "P" }, { n: "Microsoft", i: "M" }
+        ];
+
+        const brands2 = [
+            { n: "React JS", i: "⚛" }, { n: "Kentico", i: "K" },
+            { n: "Sitecore", i: "S" }, { n: "Drupal", i: "D" },
+            { n: "Android", i: "A" }, { n: "Apple", i: "" }
+        ];
+
+        function initBanner(id, data) {
+            const track = document.getElementById(id);
+            
+            // Pro jistotu vygenerujeme 4 sady log za sebou. 
+            // Tím zajistíme, že i na širokém monitoru bude track vždy delší než obrazovka.
+            const totalSet = [...data, ...data, ...data, ...data];
+
+            totalSet.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'logo-item';
+                div.innerHTML = `
+                    <div class="logo-icon">${item.i}</div>
+                    <div class="logo-name">${item.n}</div>
+                `;
+                track.appendChild(div);
+            });
+        }
+
+        initBanner('track-top', brands1);
+        initBanner('track-bottom', brands2);
+    </script>
+
+</body>
+</html>

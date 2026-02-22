@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animovaná Obálka - Finální Verze</title>
+    <style>
+        :root {
+            --env-color: #f39c12;    /* Hlavní barva obálky */
+            --env-dark: #d68910;     /* Tmavší stín obálky */
+            --letter-bg: #ffffff;   /* Barva papíru */
+            --bg-color: #2c3e50;    /* Pozadí stránky */
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Hlavní kontejner */
+        .envelope-wrapper {
+            position: relative;
+            width: 300px;
+            height: 200px;
+            background-color: var(--env-dark);
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Dopis uvnitř */
+        .letter {
+            position: absolute;
+            bottom: 5px;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            background: var(--letter-bg);
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 2;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            /* Transition pro zavírání: Dopis jede hned (0s delay), pohyb trvá 0.6s */
+            transition: transform 0.6s ease-in-out 0s;
+        }
+
+        .letter-text {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .letter-text h2 {
+            margin: 0 0 10px 0;
+            color: var(--env-dark);
+            font-size: 18px;
+        }
+
+        /* Přední boční a spodní chlopně (pomocí border triku) */
+        .envelope-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none; /* Klikat lze skrz ně na wrapper */
+        }
+
+        /* Spodní trojúhelník */
+        .envelope-front::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-bottom: 105px solid var(--env-color);
+        }
+
+        /* Boční trojúhelníky */
+        .envelope-front::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-top: 100px solid transparent;
+            border-bottom: 100px solid transparent;
+            border-left: 155px solid var(--env-dark);
+        }
+
+        /* Horní víko (Flap) */
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 105px solid var(--env-color);
+            transform-origin: top;
+            z-index: 4;
+            /* Transition pro zavírání: Čeká 0.6s (na dopis), pak se 0.4s zavírá */
+            transition: transform 0.4s ease-in-out 0.6s, z-index 0s 0.6s;
+        }
+
+        /* --- STAV PŘI OTEVŘENÍ --- */
+
+        /* Víko se otevře hned (delay 0s) */
+        .envelope-wrapper.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1; /* Musí se schovat za dopis */
+            transition: transform 0.4s ease-in-out 0s, z-index 0s 0.2s;
+        }
+
+        /* Dopis počká, až se víko odklopí (delay 0.4s) */
+        .envelope-wrapper.open .letter {
+            transform: translateY(-130px);
+            transition: transform 0.6s ease-in-out 0.4s;
+        }
+
+        /* Info text pod obálkou */
+        .hint {
+            position: absolute;
+            bottom: 50px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hint">Klikni pro otevření</div>
+
+    <div class="envelope-wrapper" onclick="toggleEnvelope()">
+        <div class="flap"></div>
+        <div class="envelope-front"></div>
+        <div class="letter">
+            <div class="letter-text">
+                <h2>Ahoj! ✉️</h2>
+                <p>Teď už je animace dokonalá. Při otevírání vyjede dopis až po odklopení víka.</p>
+                <p>Při zavírání se nejdříve schová papír a až potom se obálka bezpečně zavře.</p>
+                <p><strong>Pěkný den!</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleEnvelope() {
+            const wrapper = document.querySelector('.envelope-wrapper');
+            const hint = document.querySelector('.hint');
+            wrapper.classList.toggle('open');
+            
+            // Schováme nápovědu po prvním kliknutí
+            if(wrapper.classList.contains('open')) {
+                hint.style.opacity = "0";
+            } else {
+                hint.style.opacity = "1";
+            }
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kočka sledující kurzor</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Skryje případné přesahy */
+            height: 100vh;
+            background-color: #f0f0f0;
+            cursor: default;
+        }
+
+        /* Kontejner pro kočku */
+        .cat-container {
+            position: absolute;
+            left: 0px; /* Leží na levém kraji */
+            bottom: 0px; /* U země */
+            width: 250px; /* Šířka kočky */
+            height: 200px; /* Výška kočky */
+            transform-origin: bottom left; /* Pro případné animace otáčení */
+            z-index: 1000;
+        }
+
+        /* Tělo kočky */
+        .cat-body {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #777; /* Šedá barva kočky */
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0; /* Zaoblený tvar těla */
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Hlava kočky */
+        .cat-head {
+            position: absolute;
+            top: 20%;
+            left: 55%;
+            width: 80px;
+            height: 80px;
+            background-color: #777;
+            border-radius: 50%;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        /* Uši */
+        .ear {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 30px solid #777;
+            top: -15px;
+            z-index: 0;
+        }
+        .ear.left { left: 10px; transform: rotate(-10deg); }
+        .ear.right { right: 10px; transform: rotate(10deg); }
+
+        /* Vnitřek uší */
+        .ear-inner {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 18px solid #f9d8d8; /* Růžový vnitřek ucha */
+            top: 5px;
+            left: -8px;
+        }
+        .ear.left .ear-inner { transform: rotate(10deg); }
+        .ear.right .ear-inner { transform: rotate(-10deg); }
+
+
+        /* Oči */
+        .eye {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background-color: white;
+            border-radius: 50%;
+            top: 35px;
+            z-index: 2;
+        }
+        .eye.left { left: 15px; }
+        .eye.right { right: 15px; }
+
+        /* Zorničky */
+        .pupil {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: black;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Vycentrování */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cat-container">
+        <div class="cat-body"></div>
+        <div class="cat-head">
+            <div class="ear left"><div class="ear-inner"></div></div>
+            <div class="ear right"><div class="ear-inner"></div></div>
+            <div class="eye left"><div class="pupil"></div></div>
+            <div class="eye right"><div class="pupil"></div></div>
+        </div>
+    </div>
+
+    <script>
+        const catContainer = document.querySelector('.cat-container');
+        const leftPupil = document.querySelector('.eye.left .pupil');
+        const rightPupil = document.querySelector('.eye.right .pupil');
+
+        document.addEventListener('mousemove', (e) => {
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            // Získání pozice středu levého oka
+            const leftEyeRect = document.querySelector('.eye.left').getBoundingClientRect();
+            const leftEyeCenterX = leftEyeRect.left + leftEyeRect.width / 2;
+            const leftEyeCenterY = leftEyeRect.top + leftEyeRect.height / 2;
+
+            // Získání pozice středu pravého oka
+            const rightEyeRect = document.querySelector('.eye.right').getBoundingClientRect();
+            const rightEyeCenterX = rightEyeRect.left + rightEyeRect.width / 2;
+            const rightEyeCenterY = rightEyeRect.top + rightEyeRect.height / 2;
+
+            // Pohyb zorniček v rámci očí (max 5px od středu)
+            const maxPupilMove = 5;
+
+            // Výpočet úhlu pro levé oko
+            let angleLeft = Math.atan2(mouseY - leftEyeCenterY, mouseX - leftEyeCenterX);
+            let pupilXLeft = Math.cos(angleLeft) * maxPupilMove;
+            let pupilYLeft = Math.sin(angleLeft) * maxPupilMove;
+
+            // Výpočet úhlu pro pravé oko
+            let angleRight = Math.atan2(mouseY - rightEyeCenterY, mouseX - rightEyeCenterX);
+            let pupilXRight = Math.cos(angleRight) * maxPupilMove;
+            let pupilYRight = Math.sin(angleRight) * maxPupilMove;
+            
+            // Aplikace transformace na zorničky
+            leftPupil.style.transform = `translate(-50%, -50%) translate(${pupilXLeft}px, ${pupilYLeft}px)`;
+            rightPupil.style.transform = `translate(-50%, -50%) translate(${pupilXRight}px, ${pupilYRight}px)`;
+        });
+    </script>
+</body>
+</html>

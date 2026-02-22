@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Responzivní Alza Menu</title>
+    <title>Alza Style Mega Menu - Full Content</title>
     <style>
         :root {
             --alza-blue: #005eb8;
@@ -17,207 +17,402 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        body { background-color: var(--bg-light); }
-
-        /* HEADER / NAVBAR */
-        header {
-            background: var(--alza-blue);
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: white;
-        }
-
-        .mobile-toggle {
-            display: none; /* Schované na PC */
-            background: none;
-            border: 1px solid white;
-            color: white;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-
-        /* HLAVNÍ KONTEJNER */
-        .nav-wrapper {
-            width: 280px;
-            margin: 20px;
-            position: relative;
+        body {
+            background-color: var(--bg-light);
+            padding: 20px;
         }
 
         .nav-container {
+            width: 280px;
+            position: relative;
             background: white;
             border: 1px solid var(--border-color);
             border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .category-list { list-style: none; }
+        .nav-header {
+            padding: 15px;
+            background: var(--alza-blue);
+            color: white;
+            font-weight: bold;
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .category-list {
+            list-style: none;
+        }
 
         .category-item {
-            border-bottom: 1px solid #eee;
             position: static;
+            border-bottom: 1px solid #eee;
         }
 
         .category-link {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
+            padding: 10px 15px;
             text-decoration: none;
             color: var(--text-dark);
-            font-size: 14px;
+            font-size: 13px;
+            transition: background 0.2s;
             cursor: pointer;
         }
 
-        /* DESKTOP HOVER EFEKTY */
-        @media (min-width: 992px) {
-            .category-item:hover .category-link {
-                background-color: #eef6ff;
-                color: var(--alza-blue);
-            }
+        .category-link:hover {
+            background-color: #eef6ff;
+        }
 
-            .mega-menu {
-                display: none;
-                position: absolute;
-                left: 100%;
-                top: 0;
-                width: 700px;
-                min-height: 100%;
-                background: white;
-                border: 1px solid var(--border-color);
-                box-shadow: 10px 0 20px rgba(0,0,0,0.1);
-                z-index: 100;
-                padding: 20px;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 20px;
-            }
+        .category-link .icon {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
 
+        .category-link .arrow {
+            margin-left: auto;
+            color: #ccc;
+            transition: transform 0.3s;
+        }
+
+        /* MEGA MENU OKNO */
+        .mega-menu {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            width: 850px;
+            min-height: 100%;
+            background: white;
+            border: 1px solid var(--border-color);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+            padding: 25px;
+            grid-template-columns: repeat(4, 1fr); /* 4 sloupce pro velké menu */
+            gap: 20px;
+        }
+
+        /* Desktop Hover */
+        @media (min-width: 1025px) {
             .category-item:hover .mega-menu {
                 display: grid;
             }
+            .category-item:hover .category-link {
+                background-color: white;
+                position: relative;
+                z-index: 101;
+                border-right: 2px solid white;
+                margin-right: -1px;
+                color: var(--alza-blue);
+                font-weight: 600;
+            }
         }
 
-        /* STYLY PRO MEGA MENU (Společné) */
+        /* Aktivní stav (pro JS klikání na mobilu) */
+        .category-item.is-active .mega-menu {
+            display: grid;
+        }
+        .category-item.is-active .category-link .arrow {
+            transform: rotate(90deg);
+        }
+
+        /* Obsah Mega Menu */
         .sub-column h3 {
-            font-size: 15px;
+            font-size: 14px;
             color: var(--alza-blue);
             margin-bottom: 10px;
             border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            text-transform: uppercase;
         }
 
-        .sub-column ul { list-style: none; }
+        .sub-column ul {
+            list-style: none;
+        }
+
+        .sub-column ul li {
+            margin-bottom: 6px;
+        }
+
         .sub-column ul li a {
             text-decoration: none;
-            color: #666;
-            font-size: 13px;
-            display: block;
-            padding: 4px 0;
+            color: #555;
+            font-size: 12px;
         }
 
-        /* MOBILNÍ VERZE (Breakpoint) */
-        @media (max-width: 991px) {
-            .mobile-toggle { display: block; }
-            
-            .nav-wrapper {
-                width: 100%;
-                margin: 0;
-                display: none; /* Skryté, dokud se neklikne na hamburger */
-            }
+        .sub-column ul li a:hover {
+            color: var(--alza-green);
+            text-decoration: underline;
+        }
 
-            .nav-wrapper.show { display: block; }
+        .promo-banner {
+            grid-column: span 4;
+            background: #f1f8e9;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--alza-green);
+            font-size: 13px;
+        }
 
-            .nav-container { border-radius: 0; border: none; }
-
+        /* RESPONZIVITA */
+        @media (max-width: 1024px) {
+            .nav-container { width: 100%; }
             .mega-menu {
-                display: none; /* Schované, dokud se neklikne na kategorii */
-                background: #f9f9f9;
-                padding: 15px 30px;
+                position: static;
+                width: 100%;
+                grid-template-columns: 1fr;
+                box-shadow: none;
+                border: none;
+                border-top: 1px solid #eee;
+                padding: 15px;
             }
-
-            /* Když je kategorie na mobilu aktivní */
-            .category-item.open .mega-menu {
-                display: block;
-            }
-
-            .category-link .arrow {
-                transform: rotate(90deg);
-                margin-left: auto;
-            }
+            .promo-banner { grid-column: span 1; flex-direction: column; text-align: center; gap: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">Můj E-shop</div>
-        <button class="mobile-toggle" onclick="toggleNav()">☰ MENU</button>
-    </header>
-
-    <div class="nav-wrapper" id="navWrapper">
-        <div class="nav-container">
-            <ul class="category-list">
-                
-                <li class="category-item">
-                    <div class="category-link" onclick="toggleCategory(this)">
-                        <span>💻 Notebooky a PC</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="mega-menu">
-                        <div class="sub-column">
-                            <h3>Notebooky</h3>
-                            <ul>
-                                <li><a href="#">Herní</a></li>
-                                <li><a href="#">Kancelářské</a></li>
-                                <li><a href="#">MacBook</a></li>
-                            </ul>
-                        </div>
-                        <div class="sub-column">
-                            <h3>PC Sestavy</h3>
-                            <ul>
-                                <li><a href="#">Alza GameBox</a></li>
-                                <li><a href="#">Kancelářské</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </li>
-
-                <li class="category-item">
-                    <div class="category-link" onclick="toggleCategory(this)">
-                        <span>📱 Mobily a tablety</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <div class="mega-menu">
-                        <div class="sub-column">
-                            <h3>Telefony</h3>
-                            <ul>
-                                <li><a href="#">iPhone</a></li>
-                                <li><a href="#">Samsung</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </li>
-
-            </ul>
+    <div class="nav-container">
+        <div class="nav-header">
+            <span>☰ KATEGORIE ZBOŽÍ</span>
         </div>
+
+        <ul class="category-list">
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">💻</span>
+                    <span>Notebooky a PC</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Notebooky</h3>
+                        <ul>
+                            <li><a href="#">Kancelářské</a></li>
+                            <li><a href="#">Herní speciály</a></li>
+                            <li><a href="#">MacBooky</a></li>
+                            <li><a href="#">2 v 1</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Počítače</h3>
+                        <ul>
+                            <li><a href="#">Domácí a herní</a></li>
+                            <li><a href="#">All-in-one</a></li>
+                            <li><a href="#">Apple Mac</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Komponenty</h3>
+                        <ul>
+                            <li><a href="#">Grafické karty</a></li>
+                            <li><a href="#">Procesory</a></li>
+                            <li><a href="#">Disky SSD</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Příslušenství</h3>
+                        <ul>
+                            <li><a href="#">Monitory</a></li>
+                            <li><a href="#">Klávesnice</a></li>
+                            <li><a href="#">Software</a></li>
+                        </ul>
+                    </div>
+                    <div class="promo-banner">
+                        <span>Výprodej skladových zásob PC sestav!</span>
+                        <button style="background:var(--alza-green); color:white; border:none; padding:5px 10px; cursor:pointer;">Prohlédnout</button>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">📱</span>
+                    <span>Mobily a tablety</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Chytré telefony</h3>
+                        <ul>
+                            <li><a href="#">iPhone</a></li>
+                            <li><a href="#">Samsung</a></li>
+                            <li><a href="#">Xiaomi</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Tablety</h3>
+                        <ul>
+                            <li><a href="#">iPad</a></li>
+                            <li><a href="#">Android</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Příslušenství</h3>
+                        <ul>
+                            <li><a href="#">Pouzdra</a></li>
+                            <li><a href="#">Powerbanky</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">📺</span>
+                    <span>TV, Foto, Audio</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Televize</h3>
+                        <ul>
+                            <li><a href="#">OLED a QLED</a></li>
+                            <li><a href="#">4K Ultra HD</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Audio</h3>
+                        <ul>
+                            <li><a href="#">Sluchátka</a></li>
+                            <li><a href="#">Reproduktory</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Fotoaparáty</h3>
+                        <ul>
+                            <li><a href="#">Bezzrcadlovky</a></li>
+                            <li><a href="#">Instax</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">🧺</span>
+                    <span>Bílé zboží</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Velké spotřebiče</h3>
+                        <ul>
+                            <li><a href="#">Pračky</a></li>
+                            <li><a href="#">Lednice</a></li>
+                            <li><a href="#">Myčky</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Vaření</h3>
+                        <ul>
+                            <li><a href="#">Trouby</a></li>
+                            <li><a href="#">Varné desky</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">☕</span>
+                    <span>Malé spotřebiče</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Káva</h3>
+                        <ul>
+                            <li><a href="#">Kávovary</a></li>
+                            <li><a href="#">Zrnková káva</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Úklid</h3>
+                        <ul>
+                            <li><a href="#">Vysavače</a></li>
+                            <li><a href="#">Žehličky</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">🛠️</span>
+                    <span>Hobby a zahrada</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Dílna</h3>
+                        <ul>
+                            <li><a href="#">Aku nářadí</a></li>
+                            <li><a href="#">Sady nářadí</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Zahrada</h3>
+                        <ul>
+                            <li><a href="#">Sekačky</a></li>
+                            <li><a href="#">Grily</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+
+            <li class="category-item">
+                <a class="category-link">
+                    <span class="icon">💄</span>
+                    <span>Beauty a Drogerie</span>
+                    <span class="arrow">›</span>
+                </a>
+                <div class="mega-menu">
+                    <div class="sub-column">
+                        <h3>Péče o tělo</h3>
+                        <ul>
+                            <li><a href="#">Parfémy</a></li>
+                            <li><a href="#">Holicí strojky</a></li>
+                        </ul>
+                    </div>
+                    <div class="sub-column">
+                        <h3>Drogerie</h3>
+                        <ul>
+                            <li><a href="#">Praní</a></li>
+                            <li><a href="#">Úklid</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+        </ul>
     </div>
 
     <script>
-        // Funkce pro otevření celého menu na mobilu
-        function toggleNav() {
-            document.getElementById('navWrapper').classList.toggle('show');
-        }
+        document.querySelectorAll('.category-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (window.innerWidth <= 1024) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    
+                    document.querySelectorAll('.category-item').forEach(item => {
+                        if (item !== parent) item.classList.remove('is-active');
+                    });
 
-        // Funkce pro rozbalení podkategorií na mobilu
-        function toggleCategory(element) {
-            // Funguje jen na mobilu (šířka okna < 992px)
-            if (window.innerWidth < 992) {
-                const parent = element.parentElement;
-                parent.classList.toggle('open');
-            }
-        }
+                    parent.classList.toggle('is-active');
+                }
+            });
+        });
     </script>
+
 </body>
 </html>

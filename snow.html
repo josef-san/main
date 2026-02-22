@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Klidné Interaktivní Sněžení</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000428; /* Tmavě modrá noc */
+            overflow: hidden;
+            height: 100vh;
+        }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+
+<canvas id="snowCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('snowCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    let snowflakes = [];
+    const snowflakeCount = 150; 
+    const mouse = { x: -100, y: -100, radius: 60 };
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    class Snowflake {
+        constructor() {
+            this.reset();
+            // Rozmístíme je náhodně po celé ploše při startu
+            this.y = Math.random() * height;
+        }
+
+        reset() {
+            this.x = Math.random() * width;
+            this.y = -20; 
+            this.size = Math.random() * 3 + 1;
+            this.speedY = Math.random() * 1 + 0.5; 
+            this.speedX = Math.random() * 0.4 - 0.2; // Jemný počáteční vítr
+            this.opacity = Math.random() * 0.5 + 0.3;
+            this.wasPushed = false; // Flag, aby nedostávala rány opakovaně v jedné vteřině
+        }
+
+        update() {
+            const dx = this.x - mouse.x;
+            const dy = this.y - mouse.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Pokud je myš blízko a vločka ještě nebyla v této zóně "odfouknuta"
+            if (distance < mouse.radius) {
+                // Určíme směr (vpravo nebo vlevo)
+                const pushX = dx > 0 ? 0.5 : -0.5;
+                
+                // Změníme směr, ale jen do určité maximální šikmosti (max 1.5 nebo -1.5)
+                if (Math.abs(this.speedX) < 1.5) {
+                    this.speedX += pushX * 0.2; 
+                }
+            }
+
+            this.y += this.speedY;
+            this.x += this.speedX;
+
+            // Reset při dopadu nebo vyletění z boků
+            if (this.y > height) this.reset();
+            if (this.x > width) this.x = 0;
+            if (this.x < 0) this.x = width;
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.fill();
+        }
+    }
+
+    function init() {
+        snowflakes = [];
+        for (let i = 0; i < snowflakeCount; i++) {
+            snowflakes.push(new Snowflake());
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        snowflakes.forEach(flake => {
+            flake.update();
+            flake.draw();
+        });
+        requestAnimationFrame(animate);
+    }
+
+    init();
+    animate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responzivní Alza Menu</title>
+    <style>
+        :root {
+            --alza-blue: #005eb8;
+            --alza-green: #4caf50;
+            --text-dark: #333;
+            --bg-light: #f4f4f4;
+            --border-color: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: sans-serif;
+        }
+
+        body { background-color: var(--bg-light); }
+
+        /* HEADER / NAVBAR */
+        header {
+            background: var(--alza-blue);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .mobile-toggle {
+            display: none; /* Schované na PC */
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* HLAVNÍ KONTEJNER */
+        .nav-wrapper {
+            width: 280px;
+            margin: 20px;
+            position: relative;
+        }
+
+        .nav-container {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .category-list { list-style: none; }
+
+        .category-item {
+            border-bottom: 1px solid #eee;
+            position: static;
+        }
+
+        .category-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* DESKTOP HOVER EFEKTY */
+        @media (min-width: 992px) {
+            .category-item:hover .category-link {
+                background-color: #eef6ff;
+                color: var(--alza-blue);
+            }
+
+            .mega-menu {
+                display: none;
+                position: absolute;
+                left: 100%;
+                top: 0;
+                width: 700px;
+                min-height: 100%;
+                background: white;
+                border: 1px solid var(--border-color);
+                box-shadow: 10px 0 20px rgba(0,0,0,0.1);
+                z-index: 100;
+                padding: 20px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .category-item:hover .mega-menu {
+                display: grid;
+            }
+        }
+
+        /* STYLY PRO MEGA MENU (Společné) */
+        .sub-column h3 {
+            font-size: 15px;
+            color: var(--alza-blue);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sub-column ul { list-style: none; }
+        .sub-column ul li a {
+            text-decoration: none;
+            color: #666;
+            font-size: 13px;
+            display: block;
+            padding: 4px 0;
+        }
+
+        /* MOBILNÍ VERZE (Breakpoint) */
+        @media (max-width: 991px) {
+            .mobile-toggle { display: block; }
+            
+            .nav-wrapper {
+                width: 100%;
+                margin: 0;
+                display: none; /* Skryté, dokud se neklikne na hamburger */
+            }
+
+            .nav-wrapper.show { display: block; }
+
+            .nav-container { border-radius: 0; border: none; }
+
+            .mega-menu {
+                display: none; /* Schované, dokud se neklikne na kategorii */
+                background: #f9f9f9;
+                padding: 15px 30px;
+            }
+
+            /* Když je kategorie na mobilu aktivní */
+            .category-item.open .mega-menu {
+                display: block;
+            }
+
+            .category-link .arrow {
+                transform: rotate(90deg);
+                margin-left: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Můj E-shop</div>
+        <button class="mobile-toggle" onclick="toggleNav()">☰ MENU</button>
+    </header>
+
+    <div class="nav-wrapper" id="navWrapper">
+        <div class="nav-container">
+            <ul class="category-list">
+                
+                <li class="category-item">
+                    <div class="category-link" onclick="toggleCategory(this)">
+                        <span>💻 Notebooky a PC</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="mega-menu">
+                        <div class="sub-column">
+                            <h3>Notebooky</h3>
+                            <ul>
+                                <li><a href="#">Herní</a></li>
+                                <li><a href="#">Kancelářské</a></li>
+                                <li><a href="#">MacBook</a></li>
+                            </ul>
+                        </div>
+                        <div class="sub-column">
+                            <h3>PC Sestavy</h3>
+                            <ul>
+                                <li><a href="#">Alza GameBox</a></li>
+                                <li><a href="#">Kancelářské</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="category-item">
+                    <div class="category-link" onclick="toggleCategory(this)">
+                        <span>📱 Mobily a tablety</span>
+                        <span class="arrow">›</span>
+                    </div>
+                    <div class="mega-menu">
+                        <div class="sub-column">
+                            <h3>Telefony</h3>
+                            <ul>
+                                <li><a href="#">iPhone</a></li>
+                                <li><a href="#">Samsung</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Funkce pro otevření celého menu na mobilu
+        function toggleNav() {
+            document.getElementById('navWrapper').classList.toggle('show');
+        }
+
+        // Funkce pro rozbalení podkategorií na mobilu
+        function toggleCategory(element) {
+            // Funguje jen na mobilu (šířka okna < 992px)
+            if (window.innerWidth < 992) {
+                const parent = element.parentElement;
+                parent.classList.toggle('open');
+            }
+        }
+    </script>
+</body>
+</html>

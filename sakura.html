@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Sakura listy na zemi</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to bottom, #1a1a1a, #2c3e50);
+            overflow: hidden;
+            cursor: default;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 15px;
+            height: 25px;
+            background: #ffb7c5; /* Sakura růžová */
+            border-radius: 100% 0 100% 0; /* Tvar lístku */
+            box-shadow: inset -2px -2px 5px rgba(255, 100, 150, 0.3);
+            pointer-events: none; /* Myš detekujeme přes JS, ne přes kolizi elementu */
+            will-change: transform;
+        }
+
+        /* Některé lístky budou mít trochu jiný odstín */
+        .leaf:nth-child(even) {
+            background: #ffc0cb;
+            width: 12px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    const leafCount = 40; // Počet lístků na zemi
+    const leaves = [];
+    const interactionRadius = 120; // Jak blízko musí být myš, aby lístek odfoukla
+
+    // Inicializace listů
+    for (let i = 0; i < leafCount; i++) {
+        const leaf = document.createElement('div');
+        leaf.className = 'leaf';
+        
+        // Domovská pozice (náhodně na zemi/ploše)
+        const homeX = Math.random() * window.innerWidth;
+        const homeY = Math.random() * window.innerHeight;
+        const rotation = Math.random() * 360;
+
+        document.body.appendChild(leaf);
+
+        leaves.push({
+            el: leaf,
+            x: homeX,
+            y: homeY,
+            homeX: homeX,
+            homeY: homeY,
+            vx: 0,
+            vy: 0,
+            rotation: rotation,
+            scale: 0.5 + Math.random()
+        });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        leaves.forEach(leaf => {
+            const dx = mouseX - leaf.x;
+            const dy = mouseY - leaf.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < interactionRadius) {
+                // Výpočet síly odfouknutí
+                const force = (interactionRadius - distance) / interactionRadius;
+                const angle = Math.atan2(dy, dx);
+                
+                // Odfouknutí směrem od myši
+                leaf.vx -= Math.cos(angle) * force * 15;
+                leaf.vy -= Math.sin(angle) * force * 15;
+            }
+        });
+    });
+
+    function update() {
+        leaves.forEach(leaf => {
+            // Návratová síla domů (jako na gumičce)
+            const dx = leaf.homeX - leaf.x;
+            const dy = leaf.homeY - leaf.y;
+            
+            leaf.vx += dx * 0.01;
+            leaf.vy += dy * 0.01;
+
+            // Tření (aby se listy nezmítaly věčně)
+            leaf.vx *= 0.92;
+            leaf.vy *= 0.92;
+
+            // Aktuální pozice
+            leaf.x += leaf.vx;
+            leaf.y += leaf.vy;
+
+            // Aplikace transformace
+            leaf.el.style.transform = `
+                translate(${leaf.x}px, ${leaf.y}px) 
+                rotate(${leaf.rotation + (leaf.vx * 2)}deg) 
+                scale(${leaf.scale})
+            `;
+        });
+
+        requestAnimationFrame(update);
+    }
+
+    // Spuštění fyzikální smyčky
+    update();
+
+    // Reset domovských pozic při změně velikosti okna
+    window.addEventListener('resize', () => {
+        leaves.forEach(leaf => {
+            leaf.homeX = Math.random() * window.innerWidth;
+            leaf.homeY = Math.random() * window.innerHeight;
+        });
+    });
+</script>
+
+</body>
+</html>

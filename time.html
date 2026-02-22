@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Style Time Widget</title>
+    <style>
+        :root {
+            --day-bg: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            --night-bg: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
+            --google-gray: #5f6368;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Hlavní kruh */
+        .widget-circle {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid white;
+        }
+
+        /* Horní polokruh - Nebe */
+        .sky {
+            position: relative;
+            height: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.8s ease-in-out;
+            overflow: hidden;
+        }
+
+        /* Ikony slunce a měsíce */
+        .celestial {
+            position: absolute;
+            font-size: 50px;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .sun { color: #fbc02d; opacity: 1; transform: translateY(0); }
+        .moon { color: #f5f5f5; opacity: 0; transform: translateY(100px); }
+
+        /* Hvězdy */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.8s;
+        }
+
+        /* Spodní polokruh - Čas */
+        .time-area {
+            height: 50%;
+            width: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--google-gray);
+        }
+
+        #display-time {
+            font-size: 48px;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        /* Kontrolky pod widgetem */
+        .controls {
+            margin-top: 40px;
+            text-align: center;
+            width: 300px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #4285f4;
+        }
+
+        .mode-label {
+            font-size: 14px;
+            color: var(--google-gray);
+            margin-top: 10px;
+            display: block;
+        }
+
+        /* STAVY */
+        .is-night .sky { background: #1a1a2e; }
+        .is-night .sun { opacity: 0; transform: translateY(-100px); }
+        .is-night .moon { opacity: 1; transform: translateY(0); }
+        .is-night .star { opacity: 0.8; }
+
+        .is-day .sky { background: #87ceeb; }
+        .is-day .sun { opacity: 1; transform: translateY(0); }
+        .is-day .moon { opacity: 0; transform: translateY(100px); }
+        .is-day .star { opacity: 0; }
+
+    </style>
+</head>
+<body>
+
+    <div class="widget-circle is-day" id="main-widget">
+        <div class="sky" id="sky-element">
+            <span class="celestial sun">☀️</span>
+            <span class="celestial moon">🌙</span>
+            </div>
+        <div class="time-area">
+            <p id="display-time">12:00</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <input type="range" id="time-slider" min="0" max="1439" value="720">
+        <span class="mode-label" id="status">Režim: Simulace času</span>
+        <button onclick="resetToRealTime()" style="margin-top: 10px; padding: 5px 15px; border-radius: 20px; border: 1px solid #dadce0; background: white; cursor: pointer;">Zpět na reálný čas</button>
+    </div>
+
+    <script>
+        const widget = document.getElementById('main-widget');
+        const sky = document.getElementById('sky-element');
+        const timeText = document.getElementById('display-time');
+        const slider = document.getElementById('time-slider');
+        const statusText = document.getElementById('status');
+        
+        let isAuto = false; // Začneme v manuálním režimu, aby si to uživatel mohl hned zkusit
+
+        // Generování hvězd
+        for (let i = 0; i < 15; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            const size = Math.random() * 3 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.top = Math.random() * 80 + '%';
+            star.style.left = Math.random() * 90 + '%';
+            sky.appendChild(star);
+        }
+
+        function updateWidget(totalMinutes) {
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            
+            // Formátování textu
+            const hDisplay = hours < 10 ? '0' + hours : hours;
+            const mDisplay = minutes < 10 ? '0' + minutes : minutes;
+            timeText.innerText = `${hDisplay}:${mDisplay}`;
+
+            // Logika Den/Noc (Den je od 6:00 do 18:00)
+            if (hours >= 6 && hours < 18) {
+                widget.classList.remove('is-night');
+                widget.classList.add('is-day');
+            } else {
+                widget.classList.remove('is-day');
+                widget.classList.add('is-night');
+            }
+        }
+
+        // Listener pro slider
+        slider.addEventListener('input', (e) => {
+            isAuto = false;
+            statusText.innerText = "Režim: Simulace času";
+            updateWidget(parseInt(e.target.value));
+        });
+
+        function resetToRealTime() {
+            isAuto = true;
+            statusText.innerText = "Režim: Reálný čas";
+            autoUpdate();
+        }
+
+        function autoUpdate() {
+            if (!isAuto) return;
+            const now = new Date();
+            const totalMinutes = now.getHours() * 60 + now.getMinutes();
+            slider.value = totalMinutes;
+            updateWidget(totalMinutes);
+            setTimeout(autoUpdate, 1000);
+        }
+
+        // Inicializace na hodnotu slideru (12:00)
+        updateWidget(720);
+
+    </script>
+</body>
+</html>

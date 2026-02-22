@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vesmírný Třesk</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Kontejner pro plátno hvězd */
+        #universe-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 2s ease-in;
+        }
+
+        /* Vesmírné tlačítko */
+        .start-btn {
+            position: relative;
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            background: linear-gradient(45deg, #02010a, #0b0b2e, #1b1b4e);
+            border: 2px solid #4a4e69;
+            border-radius: 50px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        /* Pulzující efekt při najetí */
+        .start-btn:hover {
+            animation: pulse-glow 1.5s infinite;
+            border-color: #9d4edd;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 15px #5a189a, 0 0 5px #3c096c;
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 40px #9d4edd, 0 0 20px #7b2cbf;
+                transform: scale(1.05);
+            }
+            100% {
+                box-shadow: 0 0 15px #5a189a, 0 0 5px #3c096c;
+                transform: scale(1);
+            }
+        }
+
+        /* Efekt velkého třesku */
+        .big-bang-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .bang-active {
+            animation: flash-animation 1.5s ease-out forwards;
+        }
+
+        @keyframes flash-animation {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="big-bang-flash" id="flash"></div>
+    
+    <button class="start-btn" id="startBtn">START</button>
+    
+    <canvas id="universe-canvas"></canvas>
+
+    <script>
+        const btn = document.getElementById('startBtn');
+        const flash = document.getElementById('flash');
+        const canvas = document.getElementById('universe-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let stars = [];
+        let numStars = 800;
+        let speed = 0; // Začínáme na nule
+        let animationActive = false;
+
+        // Nastavení velikosti plátna
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Inicializace hvězd
+        class Star {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = (Math.random() - 0.5) * canvas.width;
+                this.y = (Math.random() - 0.5) * canvas.height;
+                this.z = Math.random() * canvas.width;
+                this.prevZ = this.z;
+            }
+
+            update() {
+                this.prevZ = this.z;
+                this.z -= speed;
+                if (this.z <= 0) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                const x = (this.x / this.z) * (canvas.width / 2) + canvas.width / 2;
+                const y = (this.y / this.z) * (canvas.height / 2) + canvas.height / 2;
+
+                const px = (this.x / this.prevZ) * (canvas.width / 2) + canvas.width / 2;
+                const py = (this.y / this.prevZ) * (canvas.height / 2) + canvas.height / 2;
+
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+        }
+
+        for (let i = 0; i < numStars; i++) {
+            stars.push(new Star());
+        }
+
+        function animate() {
+            if (!animationActive) return;
+            
+            // Černý závoj pro efekt "rozmazání" pohybu
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Akce po kliknutí
+        btn.addEventListener('click', () => {
+            // 1. Spustit záblesk (Velký třesk)
+            flash.classList.add('bang-active');
+            
+            // 2. Skrýt tlačítko
+            setTimeout(() => {
+                btn.classList.add('hidden');
+                canvas.style.opacity = "1";
+                animationActive = true;
+                speed = 15; // Rychlost průletu
+                animate();
+            }, 300);
+        });
+    </script>
+</body>
+</html>

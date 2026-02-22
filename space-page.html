@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderní Minimalismus</title>
+    <style>
+        :root {
+            --accent: #6366f1;
+            --glass: rgba(255, 255, 255, 0.85); /* Jemná průhlednost */
+            --text: #1e293b;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Hvězdné pozadí */
+        #universe-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Centrální tlačítko */
+        .start-btn {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 18px 40px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 2px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .start-btn:hover {
+            letter-spacing: 8px;
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Záblesk */
+        .flash {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .flash-active { animation: flash-anim 1.2s ease-out forwards; }
+        @keyframes flash-anim {
+            0% { opacity: 0; }
+            15% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* --- HLAVNÍ STRÁNKA --- */
+        #main-content {
+            position: relative;
+            z-index: 10;
+            width: 85%; /* Okraje vpravo a vlevo */
+            max-width: 1100px;
+            margin: 50px auto; /* Zarovnání na střed */
+            background: var(--glass);
+            backdrop-filter: blur(10px); /* Efekt rozostření pozadí */
+            border-radius: 12px;
+            min-height: 150vh;
+            transform: scale(0.7) translateY(100vh);
+            opacity: 0;
+            transition: transform 2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.5s;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        #main-content.visible {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Navigace */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 50px;
+        }
+
+        .logo { font-weight: 800; font-size: 1.2rem; letter-spacing: 2px; }
+        
+        .nav-links { display: flex; gap: 30px; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.9rem; }
+
+        .burger { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
+        .burger div { width: 25px; height: 2px; background: black; }
+
+        /* Sekce */
+        section { padding: 80px 50px; }
+
+        .hero { text-align: center; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .hero h1 { font-size: 3.5rem; margin: 0; color: #0f172a; }
+        .hero p { font-size: 1.1rem; color: #475569; max-width: 600px; margin: 20px auto; }
+
+        .services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .service-card { background: rgba(255,255,255,0.5); padding: 30px; border-radius: 8px; }
+        .service-card h3 { margin-top: 0; color: var(--accent); }
+
+        .about { background: #0f172a; color: white; text-align: center; }
+
+        /* Responzivita */
+        @media (max-width: 900px) {
+            .services { grid-template-columns: 1fr; }
+            #main-content { width: 95%; margin: 20px auto; }
+            .nav-links { display: none; }
+            .burger { display: flex; }
+            .hero h1 { font-size: 2.2rem; }
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="flash" id="flash"></div>
+    <button class="start-btn" id="startBtn">SPUSTIT</button>
+    <canvas id="universe-canvas"></canvas>
+
+    <main id="main-content">
+        <nav>
+            <div class="logo">STUDIO.ALPHA</div>
+            <ul class="nav-links">
+                <li><a href="#">Práce</a></li>
+                <li><a href="#">O nás</a></li>
+                <li><a href="#">Kontakt</a></li>
+            </ul>
+            <div class="burger">
+                <div></div><div></div><div></div>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <h1>Čistota v každém pixelu.</h1>
+            <p>Vytváříme digitální zážitky, které kombinují estetiku s funkčností. Váš projekt si zaslouží precizní zpracování.</p>
+        </section>
+
+        <section class="services">
+            <div class="service-card">
+                <h3>Branding</h3>
+                <p>Identita, která vypráví váš příběh a zaujme na první pohled.</p>
+            </div>
+            <div class="service-card">
+                <h3>Web Design</h3>
+                <p>Moderní a responzivní weby postavené na nejnovějších trendech.</p>
+            </div>
+            <div class="service-card">
+                <h3>Konzultace</h3>
+                <p>Pomůžeme vám najít správnou cestu v digitálním světě.</p>
+            </div>
+        </section>
+
+        <section class="about">
+            <h2>Věříme v minimalismus</h2>
+            <p>Méně je více. Odstraňujeme zbytečný hluk, aby vynikla podstata vašeho sdělení.</p>
+        </section>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('universe-canvas');
+        const ctx = canvas.getContext('2d');
+        const btn = document.getElementById('startBtn');
+        const flash = document.getElementById('flash');
+        const content = document.getElementById('main-content');
+
+        let stars = [];
+        let numStars = 600;
+        let speed = 0.5; // Pomalý začátek
+        let targetSpeed = 0.5;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Star {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = (Math.random() - 0.5) * canvas.width;
+                this.y = (Math.random() - 0.5) * canvas.height;
+                this.z = Math.random() * canvas.width;
+                this.prevZ = this.z;
+            }
+            update() {
+                this.prevZ = this.z;
+                this.z -= speed;
+                if (this.z <= 0) this.reset();
+            }
+            draw() {
+                const x = (this.x / this.z) * (canvas.width / 2) + canvas.width / 2;
+                const y = (this.y / this.z) * (canvas.height / 2) + canvas.height / 2;
+                const px = (this.x / this.prevZ) * (canvas.width / 2) + canvas.width / 2;
+                const py = (this.y / this.prevZ) * (canvas.height / 2) + canvas.height / 2;
+
+                ctx.strokeStyle = "white";
+                ctx.lineWidth = speed > 10 ? 2 : 1; // Silnější čáry při rychlosti
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+        }
+
+        for (let i = 0; i < numStars; i++) stars.push(new Star());
+
+        function animate() {
+            // Plynulá změna rychlosti
+            if (Math.abs(speed - targetSpeed) > 0.1) {
+                speed += (targetSpeed - speed) * 0.05;
+            }
+
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        btn.addEventListener('click', () => {
+            // 1. Warp - zrychlení
+            targetSpeed = 45;
+            btn.style.opacity = '0';
+            flash.classList.add('flash-active');
+
+            // 2. Přílet stránky a zpomalení
+            setTimeout(() => {
+                btn.classList.add('hidden');
+                targetSpeed = 0.8; // Zpět na pomalý průlet
+                content.classList.add('visible');
+                document.body.style.overflowY = 'auto';
+            }, 600);
+        });
+    </script>
+</body>
+</html>

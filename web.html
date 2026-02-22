@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web - 100vh sekce</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; overflow-x: hidden; }
+
+        /* --- CAROUSEL (100vh) --- */
+        .carousel-container { 
+            position: relative; width: 100vw; height: 100vh; 
+            background: #000; overflow: hidden; cursor: grab; user-select: none;
+        }
+        .carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.5s ease-out; }
+        .slide { 
+            min-width: 100vw; height: 100%; display: flex; align-items: center; justify-content: center; 
+            font-size: 5rem; color: white; font-weight: bold; text-shadow: 2px 2px 10px rgba(0,0,0,0.3); 
+            text-align: center;
+        }
+        .slide-1 { background: #3498db; }
+        .slide-2 { background: #e74c3c; }
+        .slide-3 { background: #2ecc71; }
+
+        /* --- NAVIGACE --- */
+        nav { background: #2c3e50; width: 100%; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { display: flex; justify-content: center; align-items: center; max-width: 1400px; margin: 0 auto; }
+        .menu-toggle { display: none; background: #34495e; border: none; color: white; font-size: 1.2rem; padding: 15px; width: 100%; cursor: pointer; text-transform: uppercase; }
+        
+        nav ul { display: flex; list-style: none; }
+        nav ul li a { display: block; color: white; text-decoration: none; padding: 20px 25px; font-weight: bold; text-transform: uppercase; font-size: 0.85rem; }
+        nav ul li a:hover { background: #34495e; }
+
+        /* --- SEKCE (100vh + Zarovnání vlevo) --- */
+        section {
+            width: 100vw; 
+            height: 100vh; /* VŽDY NA CELOU VÝŠKU */
+            padding: 0 10%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start; 
+            justify-content: center; /* Vertikální vycentrování obsahu */
+            text-align: left; 
+            opacity: 0; 
+            transform: translateX(-50px); 
+            transition: all 1s ease-out;
+        }
+        section.reveal { opacity: 1; transform: translateX(0); }
+        section:nth-child(even) { background-color: #f8f9fa; }
+
+        .content-limit { max-width: 1000px; width: 100%; }
+
+        h2 { font-size: 4rem; margin-bottom: 25px; border-left: 10px solid #3498db; padding-left: 25px; line-height: 1.1; }
+        p { font-size: 1.8rem; color: #555; margin-bottom: 20px; }
+
+        /* --- MAPA PŘES CELOU ŠÍŘKU I VÝŠKU --- */
+        .map-section {
+            width: 100vw;
+            height: 100vh; /* MAPA TAKÉ NA CELOU VÝŠKU */
+            background: #eee;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .map-section iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        @media (max-width: 900px) {
+            .menu-toggle { display: block; }
+            nav ul { display: none; flex-direction: column; width: 100%; position: absolute; top: 100%; left: 0; background: #2c3e50; }
+            nav ul.active { display: flex; }
+            nav ul li a { padding: 15px; border-bottom: 1px solid #34495e; }
+            h2 { font-size: 2.5rem; }
+            p { font-size: 1.3rem; }
+            .slide { font-size: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="carousel-container" id="top">
+    <div class="carousel-track" id="track">
+        <div class="slide slide-1">VÍTEJTE</div>
+        <div class="slide slide-2">NAŠE VIZE</div>
+        <div class="slide slide-3">PROJEKTY</div>
+    </div>
+</div>
+
+<nav>
+    <div class="nav-container">
+        <button class="menu-toggle" id="mobile-toggle">☰ MENU</button>
+        <ul id="nav-list">
+            <li><a href="#top">Domů</a></li>
+            <li><a href="#uvod">Úvod</a></li>
+            <li><a href="#o-nas">O nás</a></li>
+            <li><a href="#sluzby">Služby</a></li>
+            <li><a href="#portfolio">Portfolio</a></li>
+            <li><a href="#kontakt">Kontakt</a></li>
+        </ul>
+    </div>
+</nav>
+
+<section id="uvod">
+    <div class="content-limit">
+        <h2>Úvodní sekce</h2>
+        <p>Tato sekce nyní zabírá přesně 100 % výšky vaší obrazovky.</p>
+    </div>
+</section>
+
+<section id="o-nas">
+    <div class="content-limit">
+        <h2>O nás</h2>
+        <p>Obsah je automaticky vycentrován vertikálně, aby vypadal skvěle na všech monitorech.</p>
+    </div>
+</section>
+
+<section id="sluzby">
+    <div class="content-limit">
+        <h2>Naše Služby</h2>
+        <p>Každý scroll vás posune na novou, čistou plochu.</p>
+    </div>
+</section>
+
+<section id="portfolio">
+    <div class="content-limit">
+        <h2>Portfolio</h2>
+        <p>Ukázky naší práce v plném rozlišení.</p>
+    </div>
+</section>
+
+<section id="kontakt">
+    <div class="content-limit">
+        <h2>Kontakt</h2>
+        <p>Najdete nás v centru Prahy na Staroměstském náměstí.</p>
+    </div>
+</section>
+
+<div class="map-section">
+    <iframe 
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m12!1m12!1m3!1d2559.84623192257!2d14.418540477148817!3d50.08758037152399!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94e8db026077%3A0xc3f98295b9c24090!2zU3Rhcm9tw6tzdHNrw6kgbsOhbS4sIDExMCAwMCBTdGFyw6kgTeCompassdG8!5e0!3m2!1scs!2scz!4v1700000000000" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
+
+<script>
+    // 1. REFRESH POJISTKA
+    if (window.location.hash) { history.replaceState(null, null, window.location.pathname); }
+    window.onload = () => { setTimeout(() => window.scrollTo(0, 0), 1); };
+
+    // 2. MOBILNÍ MENU
+    const toggle = document.getElementById('mobile-toggle');
+    const menu = document.getElementById('nav-list');
+    toggle.onclick = () => menu.classList.toggle('active');
+    document.querySelectorAll('#nav-list a').forEach(link => { link.onclick = () => menu.classList.remove('active'); });
+
+    // 3. CAROUSEL (100vh + AUTOSCROLL + DRAG)
+    const track = document.getElementById('track');
+    const container = document.getElementById('top');
+    let isDragging = false, startX = 0, currentTranslate = 0, prevTranslate = 0, currentIndex = 0;
+    let autoTimer;
+
+    const setPositionByIndex = () => {
+        currentTranslate = currentIndex * -window.innerWidth;
+        prevTranslate = currentTranslate;
+        track.style.transition = 'transform 0.5s ease-out';
+        track.style.transform = `translateX(${currentTranslate}px)`;
+    };
+
+    const startAuto = () => { autoTimer = setInterval(() => { currentIndex = (currentIndex + 1) % 3; setPositionByIndex(); }, 4000); };
+    const stopAuto = () => clearInterval(autoTimer);
+
+    container.onmousedown = (e) => { stopAuto(); isDragging = true; startX = e.pageX; track.style.transition = 'none'; };
+    container.ontouchstart = (e) => { stopAuto(); isDragging = true; startX = e.touches[0].clientX; track.style.transition = 'none'; };
+    
+    window.onmousemove = (e) => {
+        if (!isDragging) return;
+        currentTranslate = prevTranslate + (e.pageX - startX);
+        track.style.transform = `translateX(${currentTranslate}px)`;
+    };
+    window.ontouchmove = (e) => {
+        if (!isDragging) return;
+        currentTranslate = prevTranslate + (e.touches[0].clientX - startX);
+        track.style.transform = `translateX(${currentTranslate}px)`;
+    };
+
+    const endDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        const movedBy = currentTranslate - prevTranslate;
+        if (movedBy < -100 && currentIndex < 2) currentIndex++;
+        else if (movedBy > 100 && currentIndex > 0) currentIndex--;
+        setPositionByIndex();
+        startAuto();
+    };
+
+    window.onmouseup = endDrag;
+    window.ontouchend = endDrag;
+
+    startAuto();
+
+    // 4. SCROLL REVEAL
+    const reveal = () => {
+        document.querySelectorAll('section').forEach(sec => {
+            if (sec.getBoundingClientRect().top < window.innerHeight * 0.8) sec.classList.add('reveal');
+        });
+    };
+    window.onscroll = reveal;
+    window.onresize = setPositionByIndex;
+</script>
+
+</body>
+</html>

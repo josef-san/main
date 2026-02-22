@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gusto Moderno | Zážitková Gastronomie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS3 - Design a Animace */
+        :root {
+            --primary: #c5a059;
+            --dark: #121212;
+            --light: #f4f4f4;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--light);
+            background-color: var(--dark);
+            scroll-behavior: smooth;
+        }
+
+        /* Navigace */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background: rgba(18, 18, 18, 0.95);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--light);
+            font-weight: 400;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Sekce */
+        #home {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: var(--dark);
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: var(--transition);
+            border: 2px solid var(--primary);
+        }
+
+        .btn:hover {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        /* Sekce - Společné */
+        section {
+            padding: 100px 10%;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 50px;
+            color: var(--primary);
+        }
+
+        /* Menu Sekce */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .menu-item {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            border-left: 4px solid var(--primary);
+        }
+
+        .menu-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* O nás */
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+
+        .about-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .about-img {
+            flex: 1;
+            min-width: 300px;
+            height: 400px;
+            background: url('https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=800&q=80');
+            background-size: cover;
+            border-radius: 15px;
+        }
+
+        /* Rezervace & Kontakt */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input, textarea, select {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 15px;
+            color: white;
+            border-radius: 5px;
+        }
+
+        input:focus {
+            outline: 1px solid var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid #333;
+            font-size: 0.9rem;
+        }
+
+        /* Animace */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responzivita */
+        @media (max-width: 768px) {
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            h1 { font-size: 2.5rem; }
+            .contact-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">GUSTO MODERNO</a>
+        <ul class="nav-links">
+            <li><a href="#home">Domů</a></li>
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#about">O nás</a></li>
+            <li><a href="#reservation">Rezervace</a></li>
+        </ul>
+    </nav>
+
+    <header id="home">
+        <h1>Chuť, na kterou nezapomenete</h1>
+        <p style="margin-bottom: 30px; font-size: 1.2rem;">Moderní kuchyně z lokálních surovin.</p>
+        <a href="#menu" class="btn">Prohlédnout menu</a>
+    </header>
+
+    <section id="menu">
+        <h2>Naše Speciality</h2>
+        <div class="menu-grid">
+            <div class="menu-item">
+                <div class="menu-header">
+                    <h3>Hovězí Steak Wagyu</h3>
+                    <span class="price">890 Kč</span>
+                </div>
+                <p>Grilovaná zelenina, lanýžové pyré, červené víno.</p>
+            </div>
+            <div class="menu-item">
+                <div class="menu-header">
+                    <h3>Losos s chřestem</h3>
+                    <span class="price">450 Kč</span>
+                </div>
+                <p>Čerstvý norský losos, máslová emulze, bylinky.</p>
+            </div>
+            <div class="menu-item">
+                <div class="menu-header">
+                    <h3>Rizoto s hříbky</h3>
+                    <span class="price">320 Kč</span>
+                </div>
+                <p>Arborio rýže, čerstvé hřiby, parmazánové hobliny.</p>
+            </div>
+            <div class="menu-item">
+                <div class="menu-header">
+                    <h3>Čokoládový Fondán</h3>
+                    <span class="price">180 Kč</span>
+                </div>
+                <p>Malinový sorbet, drcené pistácie.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" style="background-color: #181818;">
+        <h2>Náš Příběh</h2>
+        <div class="about-content">
+            <div class="about-img"></div>
+            <div class="about-text">
+                <h3>Vášeň v každém soustu</h3>
+                <p>Gusto Moderno vzniklo z lásky k poctivému řemeslu. Naši kuchaři kombinují tradiční postupy s moderní gastronomií, aby vám přinesli neopakovatelný zážitek.</p>
+                <br>
+                <p>Spolupracujeme výhradně s lokálními farmáři, což zaručuje absolutní čerstvost všech surovin na vašem talíři.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="reservation">
+        <h2>Rezervujte si stůl</h2>
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Kontakt</h3>
+                <p>📍 Vinohradská 12, Praha 2</p>
+                <p>📞 +420 123 456 789</p>
+                <p>📧 info@gustomoderno.cz</p>
+                <br>
+                <h3>Otevírací doba</h3>
+                <p>Po - Pá: 11:00 - 23:00</p>
+                <p>So - Ne: 12:00 - 00:00</p>
+            </div>
+            <form id="resForm">
+                <input type="text" placeholder="Vaše jméno" required>
+                <input type="email" placeholder="Email" required>
+                <select required>
+                    <option value="">Počet osob</option>
+                    <option value="1">1 osoba</option>
+                    <option value="2">2 osoby</option>
+                    <option value="4">4 osoby</option>
+                    <option value="5+">Více osob</option>
+                </select>
+                <input type="date" required>
+                <button type="submit" class="btn">Odeslat rezervaci</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Gusto Moderno. Všechna práva vyhrazena.</p>
+    </footer>
+
+    <script>
+        // Jednoduché ošetření formuláře
+        document.getElementById('resForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Děkujeme! Vaše rezervace byla odeslána. Brzy se vám ozveme.');
+            this.reset();
+        });
+
+        // Změna barvy navigace při skrolování
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.style.padding = '10px 50px';
+                nav.style.boxShadow = '0 5px 20px rgba(0,0,0,0.5)';
+            } else {
+                nav.style.padding = '20px 50px';
+                nav.style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

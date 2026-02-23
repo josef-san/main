@@ -552,7 +552,8 @@ function animate(timestamp) {
                     }
                 } else if (damageCooldown <= 0) {
                     lives--; 
-                    mouse.dot.r *= 0.35; 
+                    // TADY JE TA ÚPRAVA: Zmenší se, ale ne pod 12
+                    mouse.dot.r = Math.max(12, mouse.dot.r * 0.35); 
                     damageCooldown = 2000;
                     livesEl.innerText = "❤️".repeat(lives);
                     if (lives <= 0) {
@@ -589,4 +590,3 @@ window.addEventListener('resize', () => { canvas.width = window.innerWidth; canv
 </script>
 </body>
 </html>
-

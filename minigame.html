@@ -210,7 +210,7 @@ canvas.height = window.innerHeight;
 const colors = ['#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FFFF33'];
 let selectedColor = colors[0];
 let dots = [];
-let popups = []; // Nové pole pro mizející nápisy
+let popups = []; 
 let score = 0;
 let level = 1;
 let lives = 3;
@@ -226,21 +226,12 @@ let history = [];
 
 const mouse = { x: canvas.width/2, y: canvas.height/2, dot: null };
 
-// Pomocná třída pro vyskakující nápisy
 class Popup {
     constructor(x, y, text, color) {
-        this.x = x;
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.opacity = 1;
-        this.life = 60; // Doba trvání ve snímcích
+        this.x = x; this.y = y; this.text = text; this.color = color;
+        this.opacity = 1; this.life = 60; 
     }
-    update() {
-        this.y -= 1.5; // Stoupá nahoru
-        this.opacity -= 0.02; // Mizí
-        this.life--;
-    }
+    update() { this.y -= 1.5; this.opacity -= 0.02; this.life--; }
     draw() {
         ctx.save();
         ctx.globalAlpha = this.opacity;
@@ -256,7 +247,6 @@ colors.forEach((color, index) => {
     const btn = document.createElement('div');
     btn.className = 'color-btn' + (index === 0 ? ' active' : '');
     btn.style.backgroundColor = color;
-    btn.style.color = color;
     btn.onclick = () => {
         document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -276,18 +266,12 @@ function shootConfetti() {
     const rect = overlay.getBoundingClientRect();
     const originX = (rect.left + rect.width / 2) / window.innerWidth;
     const originY = (rect.top + rect.height / 2) / window.innerHeight;
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { x: originX, y: originY },
-        zIndex: 1000
-    });
+    confetti({ particleCount: 150, spread: 70, origin: { x: originX, y: originY }, zIndex: 1000 });
 }
 
 class Dot {
-    constructor(x, y, r, color, isPlayer = false, type = 'normal') {
+    constructor(x, y, r, color, isPlayer = false) {
         this.x = x; this.y = y; this.r = r; this.color = color;
-        this.type = type;
         let speed = 1.2 + (level * 0.1);
         this.vx = (Math.random() - 0.5) * speed;
         this.vy = (Math.random() - 0.5) * speed;
@@ -298,8 +282,6 @@ class Dot {
 
     draw() {
         ctx.save();
-        
-        // --- GHOST EFFECT ---
         if (this.isPlayer && slowMoTime > 0) {
             for (let i = 0; i < history.length; i++) {
                 const pos = history[i];
@@ -368,15 +350,25 @@ class Dot {
     }
 }
 
+function spawnDot(color) {
+    let r = (color === selectedColor) ? 10 : 6 + Math.random() * 8;
+    let x, y;
+    do {
+        x = Math.random() * canvas.width;
+        y = Math.random() * canvas.height;
+    } while (Math.hypot(x - mouse.x, y - mouse.y) < 200);
+    dots.push(new Dot(x, y, r, color));
+}
+
 function startLevel() {
     dots = []; popups = [];
     shieldTime = 3000; slowMoTime = 0; lastCountValue = 0; damageCooldown = 0;
-    collectedInLevel = 0; 
-    history = [];
+    collectedInLevel = 0; history = [];
     levelEl.innerText = level;
 
     warpAlertEl.classList.add('hidden');
-    if (level >= 10) {
+    // WARP NASTAVENÍ: od levelu 9
+    if (level >= 9) {
         warpProgressEl.classList.remove('hidden');
         warpCountEl.innerText = "0";
     } else {
@@ -395,14 +387,6 @@ function startLevel() {
         spawnDot(c);
     }
     document.getElementById('remainVal').innerText = level;
-}
-
-function spawnDot(color) {
-    const r = 8;
-    let x, y;
-    do { x = Math.random()*canvas.width; y = Math.random()*canvas.height; } 
-    while (Math.hypot(x - mouse.x, y - mouse.y) < 200);
-    dots.push(new Dot(x, y, r, color));
 }
 
 function animate(timestamp) {
@@ -427,10 +411,8 @@ function animate(timestamp) {
 
         mouse.dot.update();
 
-        // Kreslení popupů
         for (let i = 0; i < popups.length; i++) {
-            popups[i].update();
-            popups[i].draw();
+            popups[i].update(); popups[i].draw();
             if (popups[i].life <= 0) { popups.splice(i, 1); i--; }
         }
         
@@ -449,21 +431,20 @@ function animate(timestamp) {
                     if (damageCooldown <= 0) {
                         mouse.dot.pulse = 5;
                         mouse.dot.rings.push({ r: mouse.dot.r, opacity: 1, rgb: hexToRgb(dots[i].color) });
-                        mouse.dot.r += 1.5; score += 10 * level;
+                        // ZMENŠENÝ RŮST: na 0.5
+                        mouse.dot.r += 0.5; 
+                        score += 10 * level;
                         document.getElementById('scoreVal').innerText = score;
                         dots.splice(i, 1);
-                        
                         collectedInLevel++;
-                        if (level >= 10) {
-                            let progress = collectedInLevel % 3;
-                            if (progress === 0) progress = 3; // Ukazovat 3/3 místo 0/3 při aktivaci
-                            
-                            warpCountEl.innerText = progress === 3 ? 0 : progress;
 
-                            // Přidání popup nápisu nad hráče
+                        // WARP LOGIKA: od levelu 9
+                        if (level >= 9) {
+                            let progress = collectedInLevel % 3;
+                            if (progress === 0) progress = 3; 
+                            warpCountEl.innerText = progress === 3 ? 0 : progress;
                             let popupText = progress + "/3";
                             let popupColor = "#00fbff";
-                            
                             if (progress === 3) {
                                 slowMoTime = 3000;
                                 popupText = "WARP!";
@@ -479,7 +460,8 @@ function animate(timestamp) {
                         if (rem === 0) {
                             gameState = 'waiting'; level++;
                             document.getElementById('title').innerText = "LEVEL COMPLETE!";
-                            if (level === 10) warpAlertEl.classList.remove('hidden');
+                            // OZNÁMENÍ WARPU: při přechodu na level 9
+                            if (level === 9) warpAlertEl.classList.remove('hidden');
                             pickerWrapper.classList.add('hidden');
                             legendBox.classList.add('hidden');
                             startBtn.innerText = "START LEVEL " + level;

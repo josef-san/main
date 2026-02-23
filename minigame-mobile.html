@@ -3,154 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dot Survivor: Time Warp Mobile</title>
+    <title>Dot Survivor: Mobile Compact</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Zakázání scrollování a gest prohlížeče */
         * { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
-        
-        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; cursor: default; }
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; }
         canvas { display: block; }
         
         #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            font-size: 14px; /* Menší font pro mobily */
-            text-transform: uppercase;
-            z-index: 10;
+            position: absolute; top: 10px; left: 10px; right: 10px; color: white;
+            display: flex; justify-content: space-between; pointer-events: none;
+            font-size: 12px; text-transform: uppercase; z-index: 10;
         }
 
         #warpProgress {
-            position: absolute;
-            top: 45px;
-            left: 10px;
-            color: #00fbff;
-            font-size: 12px;
-            font-weight: bold;
-            text-shadow: 0 0 10px #00fbff;
-            pointer-events: none;
+            position: absolute; top: 40px; left: 10px; color: #00fbff;
+            font-size: 11px; font-weight: bold; text-shadow: 0 0 10px #00fbff; pointer-events: none;
         }
 
         #overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            background: rgba(10, 10, 10, 0.98);
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #00d4ff;
-            width: 85%; /* Přizpůsobení šířce mobilu */
-            max-width: 400px;
-            max-height: 90vh;
-            overflow-y: auto;
-            z-index: 30;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; color: white; background: rgba(10, 10, 10, 0.98);
+            padding: 20px; border-radius: 15px; border: 2px solid #00d4ff;
+            width: 80%; max-width: 350px; z-index: 30;
         }
 
         #nameInput {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #00d4ff;
-            color: white;
-            padding: 12px;
-            font-size: 18px;
-            width: 90%;
-            margin: 10px 0;
-            text-align: center;
-            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid #00d4ff;
+            color: white; padding: 10px; font-size: 16px; width: 90%;
+            margin: 10px 0; text-align: center; border-radius: 5px;
         }
 
-        #leaderboard { display: none; margin-top: 15px; font-size: 14px; }
-        .lb-row { display: flex; justify-content: space-between; padding: 8px 5px; border-bottom: 1px solid rgba(0, 212, 255, 0.2); }
+        button {
+            background: #00d4ff; border: none; padding: 12px;
+            color: black; font-weight: bold; font-size: 16px;
+            border-radius: 8px; cursor: pointer; margin: 5px 0; width: 100%;
+        }
 
+        .color-selector { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+        .color-btn { width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent; }
+        .color-btn.active { border-color: white; }
+
+        .lives-container { color: #ff4d4d; font-size: 16px; }
+        .hidden { display: none !important; }
         #countdown {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 100px;
-            font-weight: bold;
-            color: #00d4ff;
-            pointer-events: none;
-            z-index: 20;
-            opacity: 0;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; font-weight: bold; color: #00d4ff; pointer-events: none; z-index: 20; opacity: 0;
         }
-
         .animate-count { animation: flyIn 1s ease-out forwards; }
         @keyframes flyIn {
             0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(2.0); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
         }
-
-        button {
-            background: #00d4ff;
-            border: none;
-            padding: 15px 30px; /* Větší plocha pro kliknutí prstem */
-            color: black;
-            font-weight: bold;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 8px 0;
-            width: 100%;
-        }
-
-        .legend { background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 10px; margin: 10px 0; font-size: 12px; text-align: left; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
-        .dot-preview { width: 15px; height: 15px; border-radius: 50%; margin-right: 10px; flex-shrink: 0; }
-
-        .color-selector { display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-        .color-btn { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; }
-        .color-btn.active { border-color: white; box-shadow: 0 0 10px currentColor; }
-
-        .lives-container { color: #ff4d4d; font-size: 18px; }
-        .hidden { display: none !important; }
-        .highlight { color: #00d4ff; }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div>Lvl: <span id="levelVal" class="highlight">1</span></div>
-    <div>Tgt: <span id="remainVal" class="highlight">0</span></div>
+    <div>Lvl: <span id="levelVal" style="color:#00d4ff">1</span></div>
+    <div>Tgt: <span id="remainVal" style="color:#00d4ff">0</span></div>
     <div class="lives-container" id="livesVal">❤️❤️❤️</div>
     <div>Score: <span id="scoreVal">0</span></div>
 </div>
-
 <div id="warpProgress" class="hidden">WARP: <span id="warpCount">0</span>/3</div>
-
 <div id="countdown"></div>
 
 <div id="overlay">
     <div id="mainMenu">
-        <h2 id="title">TIME WARP SURVIVOR</h2>
-        <div id="warpAlert" class="hidden" style="color: #00fbff; font-size: 12px; margin-bottom: 10px;">⚡ WARP CHARGE UNLOCKED! ⚡</div>
-
-        <div id="setupBox">
-            <input type="text" id="nameInput" placeholder="YOUR NAME" maxlength="12">
-            <div class="color-selector" id="colorPicker"></div>
-            <div class="legend">
-                <div class="legend-item"><div class="dot-preview" style="background: white; border: 2px solid #00d4ff;"></div><span>Sbírej svou barvu</span></div>
-                <div class="legend-item"><div class="dot-preview" style="background: #00fbff; border: 1px solid white;"></div><span>3 tečky = Zpomalení času</span></div>
-            </div>
-        </div>
-
-        <button id="startBtn">PLAY</button>
-        <button id="lbBtn" style="background: #555; color: white;">LEADERBOARD</button>
+        <h2 id="title" style="margin-top:0">TIME WARP</h2>
+        <input type="text" id="nameInput" placeholder="YOUR NAME" maxlength="12">
+        <div class="color-selector" id="colorPicker"></div>
+        <button id="startBtn">START GAME</button>
+        <button id="lbBtn" style="background: #444; color: white;">LEADERBOARD</button>
     </div>
-
-    <div id="leaderboard">
+    <div id="leaderboard" class="hidden">
         <h3>TOP 10</h3>
-        <div id="lbContent"></div>
-        <button id="backBtn" style="background: #555; color: white; margin-top: 15px;">BACK</button>
+        <div id="lbContent" style="font-size:13px; text-align:left"></div>
+        <button id="backBtn" style="background: #444; color: white; margin-top:10px;">BACK</button>
     </div>
 </div>
 
@@ -173,7 +103,6 @@ const levelEl = document.getElementById('levelVal');
 const colorPicker = document.getElementById('colorPicker');
 const warpProgressEl = document.getElementById('warpProgress');
 const warpCountEl = document.getElementById('warpCount');
-const warpAlertEl = document.getElementById('warpAlert');
 
 let width, height;
 function resize() {
@@ -185,29 +114,20 @@ resize();
 
 const colors = ['#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FFFF33'];
 let selectedColor = colors[0];
-let dots = [], popups = [], history = [];
-let score = 0, level = 1, lives = 3;
+let dots = [], score = 0, level = 1, lives = 3;
 let gameState = 'waiting', animationId, lastTime = 0;
 let shieldTime = 0, slowMoTime = 0, damageCooldown = 0, collectedInLevel = 0;
 
-// Dotykové ovládání
-const touch = { x: width/2, y: height/2, active: false };
+const touch = { x: width/2, y: height/2 };
 
 const updateTouch = (e) => {
     e.preventDefault();
     const t = e.touches[0];
-    if (t) {
-        touch.x = t.clientX;
-        touch.y = t.clientY;
-        touch.active = true;
-    }
+    if (t) { touch.x = t.clientX; touch.y = t.clientY; }
 };
-
 canvas.addEventListener('touchstart', updateTouch, {passive: false});
 canvas.addEventListener('touchmove', updateTouch, {passive: false});
-canvas.addEventListener('touchend', () => { touch.active = false; }, {passive: false});
 
-// Logika hry (shodná s původní, upravená pro mobilní entity)
 colors.forEach((color, index) => {
     const btn = document.createElement('div');
     btn.className = 'color-btn' + (index === 0 ? ' active' : '');
@@ -220,16 +140,11 @@ colors.forEach((color, index) => {
     colorPicker.appendChild(btn);
 });
 
-function hexToRgb(hex) {
-    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
-    return `${r},${g},${b}`;
-}
-
 class Dot {
     constructor(x, y, r, color, isPlayer = false) {
         this.x = x; this.y = y; this.r = r; this.color = color;
         this.isPlayer = isPlayer;
-        let speed = 1.0 + (level * 0.08);
+        let speed = 0.8 + (level * 0.07);
         this.vx = (Math.random() - 0.5) * speed;
         this.vy = (Math.random() - 0.5) * speed;
     }
@@ -238,24 +153,19 @@ class Dot {
         ctx.save();
         if (this.isPlayer) {
             if (damageCooldown > 0 && Math.floor(Date.now() / 100) % 2 === 0) ctx.globalAlpha = 0.2;
-            ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+            ctx.shadowBlur = 10; ctx.shadowColor = this.color;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
             ctx.fillStyle = this.color;
             ctx.strokeStyle = "white"; ctx.lineWidth = 2;
             ctx.fill(); ctx.stroke();
-            
             if (shieldTime > 0) {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.r + 12, 0, Math.PI * 2);
-                ctx.strokeStyle = (shieldTime < 1000) ? "rgba(255,0,0,0.5)" : "rgba(0,212,255,0.5)";
-                ctx.lineWidth = 3; ctx.stroke();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.r + 8, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(0,212,255,0.5)"; ctx.stroke();
             }
         } else {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = this.color; ctx.fill();
         }
         ctx.restore();
     }
@@ -267,41 +177,36 @@ class Dot {
             if (this.x < 0 || this.x > width) this.vx *= -1;
             if (this.y < 0 || this.y > height) this.vy *= -1;
         } else {
-            // Smooth následování prstu
-            let dx = touch.x - this.x;
-            let dy = touch.y - this.y;
-            this.x += dx * 0.2;
-            this.y += dy * 0.2;
+            this.x += (touch.x - this.x) * 0.25;
+            this.y += (touch.y - this.y) * 0.25;
         }
         this.draw();
     }
 }
 
-function spawnDot(color) {
-    let r = (color === selectedColor) ? 12 : 8 + Math.random() * 5;
-    let x = Math.random() * width, y = Math.random() * height;
-    dots.push(new Dot(x, y, r, color));
-}
-
 function startLevel() {
     dots = []; shieldTime = 3000; slowMoTime = 0; collectedInLevel = 0;
     levelEl.innerText = level;
-    player = new Dot(touch.x, touch.y, 14, selectedColor, true);
+    // Hráč začíná s poloměrem 10 (místo 14)
+    player = new Dot(touch.x, touch.y, 10, selectedColor, true);
     
-    let enemyCount = 12 + Math.min(level * 2, 30);
-    for (let i = 0; i < level; i++) spawnDot(selectedColor);
+    // Nepřátelé jsou menší (5-8px místo 8-13px)
+    let enemyCount = 15 + Math.min(level * 2, 40);
+    for (let i = 0; i < level; i++) {
+        dots.push(new Dot(Math.random()*width, Math.random()*height, 8, selectedColor));
+    }
     for (let i = 0; i < enemyCount; i++) {
         let c; do { c = colors[Math.floor(Math.random()*colors.length)]; } while(c === selectedColor);
-        spawnDot(c);
+        dots.push(new Dot(Math.random()*width, Math.random()*height, 5 + Math.random()*3, c));
     }
     document.getElementById('remainVal').innerText = level;
+    if (level >= 9) warpProgressEl.classList.remove('hidden');
 }
 
 let player;
-
 function animate(t) {
     let dt = t - lastTime; lastTime = t;
-    ctx.fillStyle = (slowMoTime > 0) ? 'rgba(0, 20, 40, 0.4)' : 'rgba(5, 5, 5, 0.4)';
+    ctx.fillStyle = (slowMoTime > 0) ? 'rgba(0, 15, 30, 0.4)' : 'rgba(5, 5, 5, 0.4)';
     ctx.fillRect(0, 0, width, height);
     
     if (gameState === 'playing') {
@@ -325,6 +230,8 @@ function animate(t) {
                     dots.splice(i, 1);
                     score += 10 * level;
                     collectedInLevel++;
+                    // Přírůstek zmenšen na 0.2
+                    player.r += 0.2; 
                     document.getElementById('scoreVal').innerText = score;
                     document.getElementById('remainVal').innerText = dots.filter(d => d.color === player.color).length;
                     
@@ -337,18 +244,17 @@ function animate(t) {
                         gameState = 'waiting'; level++;
                         overlay.classList.remove('hidden');
                         startBtn.innerText = "NEXT LEVEL: " + level;
-                        confetti({particleCount: 100, spread: 70, origin: {y: 0.6}});
+                        confetti({particleCount: 80, spread: 50, origin: {y: 0.6}});
                     }
                 } else if (damageCooldown <= 0 && shieldTime <= 0) {
-                    lives--;
-                    damageCooldown = 2000;
+                    lives--; damageCooldown = 2000;
+                    player.r *= 0.8; // Při zásahu se kulička zmenší
                     livesEl.innerText = "❤️".repeat(lives);
                     if (lives <= 0) {
                         gameState = 'over';
-                        saveScore(nameInput.value, score, level);
                         overlay.classList.remove('hidden');
                         document.getElementById('title').innerText = "GAME OVER";
-                        startBtn.innerText = "TRY AGAIN";
+                        startBtn.innerText = "RETRY";
                         level = 1; score = 0; lives = 3;
                     }
                 }
@@ -358,32 +264,9 @@ function animate(t) {
     animationId = requestAnimationFrame(animate);
 }
 
-function saveScore(n, s, l) {
-    let scores = JSON.parse(localStorage.getItem('dotScores') || '[]');
-    scores.push({name: n || 'Anon', score: s, level: l});
-    scores.sort((a,b) => b.score - a.score);
-    localStorage.setItem('dotScores', JSON.stringify(scores.slice(0, 10)));
-}
-
-startBtn.onclick = () => {
-    gameState = 'playing';
-    overlay.classList.add('hidden');
-    startLevel();
-    lastTime = performance.now();
-    if (!animationId) animate(lastTime);
-};
-
-lbBtn.onclick = () => {
-    mainMenu.classList.add('hidden');
-    leaderboard.style.display = 'block';
-    const s = JSON.parse(localStorage.getItem('dotScores') || '[]');
-    lbContent.innerHTML = s.map(x => `<div class="lb-row"><span>${x.name}</span><span>L${x.level}</span><span>${x.score}</span></div>`).join('');
-};
-
-backBtn.onclick = () => {
-    leaderboard.style.display = 'none';
-    mainMenu.classList.remove('hidden');
-};
+startBtn.onclick = () => { gameState = 'playing'; overlay.classList.add('hidden'); startLevel(); lastTime = performance.now(); if (!animationId) animate(lastTime); };
+lbBtn.onclick = () => { mainMenu.classList.add('hidden'); leaderboard.classList.remove('hidden'); };
+backBtn.onclick = () => { leaderboard.classList.add('hidden'); mainMenu.classList.remove('hidden'); };
 </script>
 </body>
 </html>

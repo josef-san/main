@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dot Survivor: Time Warp FIXED</title>
+    <title>Dot Survivor: Time Warp</title>
     <style>
         body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; cursor: default; }
         body.ingame { cursor: none; }
@@ -30,10 +30,10 @@
             text-align: center;
             color: white;
             background: rgba(10, 10, 10, 0.98);
-            padding: 40px;
+            padding: 30px;
             border-radius: 15px;
             border: 2px solid #00d4ff;
-            min-width: 320px;
+            min-width: 380px;
             z-index: 30;
         }
 
@@ -66,26 +66,50 @@
             font-size: 20px;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 10px;
             transition: transform 0.2s;
         }
         button:hover { transform: scale(1.05); }
 
-        .color-selector-wrapper { margin: 20px 0; }
-        .color-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
+        .legend {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
+        .legend-item { display: flex; align-items: center; margin-bottom: 12px; }
+        
+        /* Stylizace ikon v legendě aby odpovídaly hře */
+        .dot-preview { 
+            width: 18px; height: 18px; border-radius: 50%; margin-right: 15px; flex-shrink: 0; 
+            box-sizing: border-box;
+        }
+        
+        .warp-preview { 
+            background: #00fbff; 
+            border: 2px solid white; 
+            position: relative; 
+        }
+        /* Ručičky hodin v legendě */
+        .warp-preview::before {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 6px; height: 2px; 
+            background: black; transform-origin: left; transform: translate(0, -50%);
+        }
+        .warp-preview::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 2px; height: 5px; 
+            background: black; transform-origin: bottom; transform: translate(-50%, -100%);
+        }
+
+        .color-selector-wrapper { margin-bottom: 15px; }
+        .color-selector { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+
         .color-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
+            width: 35px; height: 35px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: all 0.2s;
         }
         .color-btn.active { border-color: white; transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
 
@@ -98,28 +122,46 @@
 
 <div id="ui">
     <div>Level: <span id="levelVal" class="highlight">1</span></div>
-    <div>Cíle: <span id="remainVal" class="highlight">0</span></div>
+    <div>Target: <span id="remainVal" class="highlight">0</span></div>
     <div class="lives-container" id="livesVal">❤️❤️❤️</div>
-    <div>Skóre: <span id="scoreVal">0</span></div>
+    <div>Score: <span id="scoreVal">0</span></div>
 </div>
 
 <div id="countdown"></div>
 
 <div id="overlay">
     <h1 id="title">TIME WARP SURVIVOR</h1>
-    <p id="desc">Přežij co nejdéle!</p>
+    
+    <div class="legend" id="legendBox">
+        <div class="legend-item">
+            <div class="dot-preview" style="background: white; border: 3px solid #00d4ff;"></div>
+            <span><strong>YOU:</strong> Absorb dots of your color to grow and level up.</span>
+        </div>
+        <div class="legend-item">
+            <div class="dot-preview warp-preview"></div>
+            <span><strong>TIME WARP:</strong> Collect the clock to slow down all enemies for 3 seconds.</span>
+        </div>
+        <div class="legend-item">
+            <div class="dot-preview" style="background: #ff4d4d;"></div>
+            <span><strong>ENEMIES:</strong> Different colors shrink you and cost lives.</span>
+        </div>
+    </div>
     
     <div class="color-selector-wrapper" id="pickerWrapper">
-        <p>Zvol si svou barvu:</p>
+        <p>Choose your starting color:</p>
         <div class="color-selector" id="colorPicker"></div>
     </div>
 
-    <button id="startBtn">START</button>
+    <button id="startBtn">START GAME</button>
 </div>
 
 <canvas id="canvas"></canvas>
 
 <script>
+// ... (Zbytek JavaScript kódu zůstává stejný jako v předchozí verzi, 
+// včetně magnetických okrajů, animace pohlcení a logiky levelů)
+// Zde je zkrácená verze pro přehlednost:
+
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
@@ -129,6 +171,7 @@ const livesEl = document.getElementById('livesVal');
 const levelEl = document.getElementById('levelVal');
 const colorPicker = document.getElementById('colorPicker');
 const pickerWrapper = document.getElementById('pickerWrapper');
+const legendBox = document.getElementById('legendBox');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -178,17 +221,16 @@ class Dot {
 
     draw() {
         ctx.save();
-        ctx.beginPath();
-        
         if (this.type === 'warp') {
+            ctx.beginPath();
             ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
             ctx.fillStyle = "#00fbff"; ctx.fill();
             ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x, this.y - this.r + 4);
+            ctx.lineTo(this.x + this.r - 5, this.y); // Horizontal hand
             ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x + this.r - 5, this.y);
+            ctx.lineTo(this.x, this.y - this.r + 4); // Vertical hand
             ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.stroke();
         } else {
             if (this.isPlayer) {
@@ -217,6 +259,7 @@ class Dot {
                     ctx.lineWidth = 4; ctx.stroke();
                 }
             } else {
+                ctx.beginPath();
                 ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
@@ -227,22 +270,18 @@ class Dot {
 
     update() {
         if (!this.isPlayer) {
-            let factor = (slowMoTime > 0) ? 0.3 : 1;
-            const margin = 50;
-            const force = 0.05;
+            let factor = (slowMoTime > 0) ? 0.2 : 1;
+            const margin = 60;
+            const force = 0.06;
             if (this.x < margin) this.vx += force;
             if (this.x > canvas.width - margin) this.vx -= force;
             if (this.y < margin) this.vy += force;
             if (this.y > canvas.height - margin) this.vy -= force;
-
-            this.x += this.vx * factor; 
-            this.y += this.vy * factor;
-
+            this.x += this.vx * factor; this.y += this.vy * factor;
             if (this.x - this.r < 0 || this.x + this.r > canvas.width) this.vx *= -1;
             if (this.y - this.r < 0 || this.y + this.r > canvas.height) this.vy *= -1;
         } else {
-            this.x = mouse.x;
-            this.y = mouse.y;
+            this.x = mouse.x; this.y = mouse.y;
         }
         this.draw();
     }
@@ -259,12 +298,10 @@ function startLevel() {
     dots = []; timeWarps = [];
     shieldTime = 3000; slowMoTime = 0; lastCountValue = 0; damageCooldown = 0;
     levelEl.innerText = level;
-    
     if (!mouse.dot || lives <= 0) {
         lives = 3;
         mouse.dot = new Dot(mouse.x, mouse.y, 12, selectedColor, true);
     }
-    
     livesEl.innerText = "❤️".repeat(lives);
     for (let i = 0; i < level; i++) spawnDot(mouse.dot.color);
     let enemyCount = 15 + (level <= 10 ? level : 10 + (level-10)*2);
@@ -286,10 +323,8 @@ function spawnDot(color) {
 function animate(timestamp) {
     let deltaTime = timestamp - lastTime;
     lastTime = timestamp;
-
-    ctx.fillStyle = (slowMoTime > 0) ? 'rgba(0, 20, 40, 0.4)' : 'rgba(5, 5, 5, 0.4)';
+    ctx.fillStyle = (slowMoTime > 0) ? 'rgba(0, 25, 50, 0.4)' : 'rgba(5, 5, 5, 0.4)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     if (gameState === 'playing') {
         if (shieldTime > 0) {
             shieldTime -= deltaTime;
@@ -303,32 +338,25 @@ function animate(timestamp) {
         }
         if (slowMoTime > 0) slowMoTime -= deltaTime;
         if (damageCooldown > 0) damageCooldown -= deltaTime;
-
         if (timestamp - lastWarpSpawn > 15000) {
             timeWarps.push(new Dot(Math.random()*canvas.width, Math.random()*canvas.height, 12, "#00fbff", false, "warp"));
             lastWarpSpawn = timestamp;
         }
-
         mouse.dot.update();
-
         for (let i = 0; i < timeWarps.length; i++) {
             timeWarps[i].update();
             if (Math.hypot(mouse.x - timeWarps[i].x, mouse.y - timeWarps[i].y) < mouse.dot.r + timeWarps[i].r) {
-                slowMoTime = 3000;
-                timeWarps.splice(i, 1); i--;
+                slowMoTime = 3000; timeWarps.splice(i, 1); i--;
             }
         }
-
         for (let i = 0; i < dots.length; i++) {
             dots[i].update();
             const dist = Math.hypot(mouse.dot.x - dots[i].x, mouse.dot.y - dots[i].y);
-            
             if (shieldTime > 0 && dist < mouse.dot.r + dots[i].r + 15) {
                 let angle = Math.atan2(dots[i].y - mouse.dot.y, dots[i].x - mouse.dot.x);
                 dots[i].vx = Math.cos(angle) * 4; dots[i].vy = Math.sin(angle) * 4;
                 continue;
             }
-
             if (shieldTime <= 0 && dist < mouse.dot.r + dots[i].r) {
                 if (mouse.dot.color === dots[i].color) {
                     if (damageCooldown <= 0) {
@@ -341,8 +369,9 @@ function animate(timestamp) {
                         document.getElementById('remainVal').innerText = rem;
                         if (rem === 0) {
                             gameState = 'waiting'; level++;
-                            document.getElementById('title').innerText = "LEVEL HOTOV!";
-                            pickerWrapper.classList.add('hidden'); // Skryj výběr při postupu
+                            document.getElementById('title').innerText = "LEVEL COMPLETE!";
+                            pickerWrapper.classList.add('hidden');
+                            legendBox.classList.add('hidden');
                             startBtn.innerText = "START LEVEL " + level;
                             overlay.classList.remove('hidden');
                             document.body.classList.remove('ingame');
@@ -354,9 +383,10 @@ function animate(timestamp) {
                     livesEl.innerText = "❤️".repeat(lives);
                     if (lives <= 0) {
                         gameState = 'over'; 
-                        document.getElementById('title').innerText = "KONEC CESTY";
-                        pickerWrapper.classList.remove('hidden'); // Znovu ukaž výběr po smrti
-                        startBtn.innerText = "ZNOVU";
+                        document.getElementById('title').innerText = "GAME OVER";
+                        pickerWrapper.classList.remove('hidden');
+                        legendBox.classList.remove('hidden');
+                        startBtn.innerText = "RETRY";
                         overlay.classList.remove('hidden');
                         document.body.classList.remove('ingame');
                         level = 1; score = 0; mouse.dot = null;

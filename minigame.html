@@ -83,7 +83,6 @@
 
         .legend-item { display: flex; align-items: center; margin-bottom: 12px; }
         
-        /* Stylizace ikon v legendě aby odpovídaly hře */
         .dot-preview { 
             width: 18px; height: 18px; border-radius: 50%; margin-right: 15px; flex-shrink: 0; 
             box-sizing: border-box;
@@ -94,7 +93,6 @@
             border: 2px solid white; 
             position: relative; 
         }
-        /* Ručičky hodin v legendě */
         .warp-preview::before {
             content: ''; position: absolute; top: 50%; left: 50%; width: 6px; height: 2px; 
             background: black; transform-origin: left; transform: translate(0, -50%);
@@ -158,10 +156,6 @@
 <canvas id="canvas"></canvas>
 
 <script>
-// ... (Zbytek JavaScript kódu zůstává stejný jako v předchozí verzi, 
-// včetně magnetických okrajů, animace pohlcení a logiky levelů)
-// Zde je zkrácená verze pro přehlednost:
-
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
@@ -228,9 +222,9 @@ class Dot {
             ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
             ctx.beginPath();
             ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x + this.r - 5, this.y); // Horizontal hand
+            ctx.lineTo(this.x + this.r - 5, this.y);
             ctx.moveTo(this.x, this.y);
-            ctx.lineTo(this.x, this.y - this.r + 4); // Vertical hand
+            ctx.lineTo(this.x, this.y - this.r + 4);
             ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.stroke();
         } else {
             if (this.isPlayer) {
@@ -338,10 +332,16 @@ function animate(timestamp) {
         }
         if (slowMoTime > 0) slowMoTime -= deltaTime;
         if (damageCooldown > 0) damageCooldown -= deltaTime;
-        if (timestamp - lastWarpSpawn > 15000) {
+
+        // Četnost Time Warpů
+        let warpInterval = 15000;
+        if (level >= 10) warpInterval = Math.max(5000, 15000 - (level - 9) * 1000);
+
+        if (timestamp - lastWarpSpawn > warpInterval) {
             timeWarps.push(new Dot(Math.random()*canvas.width, Math.random()*canvas.height, 12, "#00fbff", false, "warp"));
             lastWarpSpawn = timestamp;
         }
+
         mouse.dot.update();
         for (let i = 0; i < timeWarps.length; i++) {
             timeWarps[i].update();

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dot Survivor: Time Warp</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; cursor: default; }
         body.ingame { cursor: none; }
@@ -20,6 +21,26 @@
             font-size: 18px;
             text-transform: uppercase;
             z-index: 10;
+        }
+
+        #warpProgress {
+            position: absolute;
+            top: 55px;
+            left: 20px;
+            color: #00fbff;
+            font-size: 14px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00fbff;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .warp-ready {
+            animation: pulse-warp 0.4s infinite alternate;
+            color: #fff !important;
+        }
+        @keyframes pulse-warp {
+            from { transform: scale(1); text-shadow: 0 0 10px #00fbff; }
+            to { transform: scale(1.2); text-shadow: 0 0 25px #00fbff, 0 0 40px #00fbff; }
         }
 
         #overlay {
@@ -114,6 +135,16 @@
         .lives-container { color: #ff4d4d; font-size: 24px; letter-spacing: 5px; }
         .hidden { display: none !important; }
         .highlight { color: #00d4ff; font-weight: bold; }
+
+        /* Styl pro upozornění na Warp Charge */
+        #warpAlert {
+            color: #00fbff;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px dashed #00fbff;
+            background: rgba(0, 251, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -125,11 +156,15 @@
     <div>Score: <span id="scoreVal">0</span></div>
 </div>
 
+<div id="warpProgress" class="hidden">WARP CHARGE: <span id="warpCount">0</span>/3</div>
+
 <div id="countdown"></div>
 
 <div id="overlay">
     <h1 id="title">TIME WARP SURVIVOR</h1>
     
+    <div id="warpAlert" class="hidden">⚡ WARP CHARGE UNLOCKED! ⚡<br>Collect 3 dots to trigger a Time Warp!</div>
+
     <div class="legend" id="legendBox">
         <div class="legend-item">
             <div class="dot-preview" style="background: white; border: 3px solid #00d4ff;"></div>
@@ -166,6 +201,9 @@ const levelEl = document.getElementById('levelVal');
 const colorPicker = document.getElementById('colorPicker');
 const pickerWrapper = document.getElementById('pickerWrapper');
 const legendBox = document.getElementById('legendBox');
+const warpProgressEl = document.getElementById('warpProgress');
+const warpCountEl = document.getElementById('warpCount');
+const warpAlertEl = document.getElementById('warpAlert');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
@@ -185,6 +223,7 @@ let lastCountValue = 0;
 let damageCooldown = 0;
 let lastTime = 0;
 let lastWarpSpawn = 0;
+let collectedInLevel = 0; 
 
 const mouse = { x: canvas.width/2, y: canvas.height/2, dot: null };
 
@@ -200,6 +239,18 @@ colors.forEach((color, index) => {
     };
     colorPicker.appendChild(btn);
 });
+
+function shootConfetti() {
+    const rect = overlay.getBoundingClientRect();
+    const originX = (rect.left + rect.width / 2) / window.innerWidth;
+    const originY = (rect.top + rect.height / 2) / window.innerHeight;
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { x: originX, y: originY },
+        zIndex: 1000
+    });
+}
 
 class Dot {
     constructor(x, y, r, color, isPlayer = false, type = 'normal') {
@@ -291,7 +342,18 @@ function hexToRgb(hex) {
 function startLevel() {
     dots = []; timeWarps = [];
     shieldTime = 3000; slowMoTime = 0; lastCountValue = 0; damageCooldown = 0;
+    collectedInLevel = 0; 
     levelEl.innerText = level;
+
+    // Reset UI a schování upozornění
+    warpAlertEl.classList.add('hidden');
+    if (level >= 10) {
+        warpProgressEl.classList.remove('hidden');
+        warpCountEl.innerText = "0";
+    } else {
+        warpProgressEl.classList.add('hidden');
+    }
+
     if (!mouse.dot || lives <= 0) {
         lives = 3;
         mouse.dot = new Dot(mouse.x, mouse.y, 12, selectedColor, true);
@@ -333,10 +395,8 @@ function animate(timestamp) {
         if (slowMoTime > 0) slowMoTime -= deltaTime;
         if (damageCooldown > 0) damageCooldown -= deltaTime;
 
-        // Četnost Time Warpů
         let warpInterval = 15000;
         if (level >= 10) warpInterval = Math.max(5000, 15000 - (level - 9) * 1000);
-
         if (timestamp - lastWarpSpawn > warpInterval) {
             timeWarps.push(new Dot(Math.random()*canvas.width, Math.random()*canvas.height, 12, "#00fbff", false, "warp"));
             lastWarpSpawn = timestamp;
@@ -365,21 +425,44 @@ function animate(timestamp) {
                         mouse.dot.r += 1.5; score += 10 * level;
                         document.getElementById('scoreVal').innerText = score;
                         dots.splice(i, 1);
+                        
+                        collectedInLevel++;
+                        if (level >= 10) {
+                            let progress = collectedInLevel % 3;
+                            warpCountEl.innerText = progress;
+
+                            if (progress === 0 && collectedInLevel !== 0) {
+                                warpProgressEl.classList.add('warp-ready');
+                                setTimeout(() => warpProgressEl.classList.remove('warp-ready'), 800);
+                                timeWarps.push(new Dot(mouse.x + 40, mouse.y + 40, 15, "#00fbff", false, "warp"));
+                            }
+                        }
+
                         const rem = dots.filter(d => d.color === mouse.dot.color).length;
                         document.getElementById('remainVal').innerText = rem;
                         if (rem === 0) {
                             gameState = 'waiting'; level++;
                             document.getElementById('title').innerText = "LEVEL COMPLETE!";
+                            
+                            // Ukázání upozornění na Warp Charge při dosažení levelu 10
+                            if (level === 10) {
+                                warpAlertEl.classList.remove('hidden');
+                            }
+
                             pickerWrapper.classList.add('hidden');
                             legendBox.classList.add('hidden');
                             startBtn.innerText = "START LEVEL " + level;
                             overlay.classList.remove('hidden');
                             document.body.classList.remove('ingame');
+                            shootConfetti();
                         }
                         i--;
                     }
                 } else if (damageCooldown <= 0) {
-                    lives--; mouse.dot.r *= 0.85; damageCooldown = 2000;
+                    lives--; 
+                    // Změna: zmenšení o 45% (původních 10% + 35% navíc) -> násobení 0.55
+                    mouse.dot.r *= 0.35; 
+                    damageCooldown = 2000;
                     livesEl.innerText = "❤️".repeat(lives);
                     if (lives <= 0) {
                         gameState = 'over'; 

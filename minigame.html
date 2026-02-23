@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <title>Dot Survivor: Visible Dots Fix</title>
+    <title>Dot Survivor: Time Warp FIXED</title>
     <style>
         body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; cursor: default; }
         body.ingame { cursor: none; }
@@ -29,28 +29,67 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
-            background: rgba(30, 30, 30, 0.95);
+            background: rgba(10, 10, 10, 0.98);
             padding: 40px;
             border-radius: 15px;
-            border: 3px solid #555;
+            border: 2px solid #00d4ff;
             min-width: 320px;
+            z-index: 30;
+        }
+
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 160px;
+            font-weight: bold;
+            color: #00d4ff;
+            pointer-events: none;
             z-index: 20;
+            opacity: 0;
+        }
+
+        .animate-count { animation: flyIn 1s ease-out forwards; }
+        @keyframes flyIn {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
         }
 
         button {
             background: #00d4ff;
             border: none;
             padding: 15px 40px;
-            color: #000;
+            color: black;
             font-weight: bold;
             font-size: 20px;
             border-radius: 8px;
             cursor: pointer;
             margin-top: 20px;
-            transition: transform 0.1s;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+
+        .color-selector-wrapper { margin: 20px 0; }
+        .color-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
         }
 
-        button:hover { transform: scale(1.05); background: #fff; }
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .color-btn.active { border-color: white; transform: scale(1.2); box-shadow: 0 0 15px currentColor; }
+
+        .lives-container { color: #ff4d4d; font-size: 24px; letter-spacing: 5px; }
         .hidden { display: none !important; }
         .highlight { color: #00d4ff; font-weight: bold; }
     </style>
@@ -59,17 +98,23 @@
 
 <div id="ui">
     <div>Level: <span id="levelVal" class="highlight">1</span></div>
-    <div>Zbývá tvých: <span id="remainVal" class="highlight">0</span></div>
+    <div>Cíle: <span id="remainVal" class="highlight">0</span></div>
+    <div class="lives-container" id="livesVal">❤️❤️❤️</div>
     <div>Skóre: <span id="scoreVal">0</span></div>
 </div>
 
+<div id="countdown"></div>
+
 <div id="overlay">
-    <h1 id="title">DOT SURVIVOR</h1>
-    <p id="desc">Sbírej tečky své barvy, vyhýbej se ostatním!</p>
-    <div style="margin: 20px 0;">
-        Tvoje barva: <span id="targetColor" style="display:inline-block; width:22px; height:22px; border-radius:50%; vertical-align:middle; border:2px solid white;"></span>
+    <h1 id="title">TIME WARP SURVIVOR</h1>
+    <p id="desc">Přežij co nejdéle!</p>
+    
+    <div class="color-selector-wrapper" id="pickerWrapper">
+        <p>Zvol si svou barvu:</p>
+        <div class="color-selector" id="colorPicker"></div>
     </div>
-    <button id="startBtn">START HRY</button>
+
+    <button id="startBtn">START</button>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -77,66 +122,122 @@
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const scoreEl = document.getElementById('scoreVal');
-const levelEl = document.getElementById('levelVal');
-const remainEl = document.getElementById('remainVal');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
-const targetColorDisp = document.getElementById('targetColor');
+const countdownEl = document.getElementById('countdown');
+const livesEl = document.getElementById('livesVal');
+const levelEl = document.getElementById('levelVal');
+const colorPicker = document.getElementById('colorPicker');
+const pickerWrapper = document.getElementById('pickerWrapper');
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// OPRAVENÉ POLE BAREV - žádné textové názvy ani černé tóny
 const colors = ['#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FFFF33'];
+let selectedColor = colors[0];
 let dots = [];
+let timeWarps = [];
 let score = 0;
 let level = 1;
+let lives = 3;
 let gameState = 'waiting'; 
 let animationId;
+let shieldTime = 0;
+let slowMoTime = 0;
+let lastCountValue = 0;
+let damageCooldown = 0;
+let lastTime = 0;
+let lastWarpSpawn = 0;
 
 const mouse = { x: canvas.width/2, y: canvas.height/2, dot: null };
 
+colors.forEach((color, index) => {
+    const btn = document.createElement('div');
+    btn.className = 'color-btn' + (index === 0 ? ' active' : '');
+    btn.style.backgroundColor = color;
+    btn.style.color = color;
+    btn.onclick = () => {
+        document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedColor = color;
+    };
+    colorPicker.appendChild(btn);
+});
+
 class Dot {
-    constructor(x, y, r, color, isPlayer = false) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.color = color;
-        // Rychlost
-        let speedMult = 1.5 + (level * 0.3);
-        this.vx = (Math.random() - 0.5) * speedMult;
-        this.vy = (Math.random() - 0.5) * speedMult;
+    constructor(x, y, r, color, isPlayer = false, type = 'normal') {
+        this.x = x; this.y = y; this.r = r; this.color = color;
+        this.type = type;
+        let speed = (type === 'warp') ? 0.8 : 1.2 + (level * 0.1);
+        this.vx = (Math.random() - 0.5) * speed;
+        this.vy = (Math.random() - 0.5) * speed;
         this.isPlayer = isPlayer;
+        this.pulse = 0;
+        this.rings = [];
     }
 
     draw() {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
         
-        // Tenký obal pro všechny tečky, aby byly vidět i na tmavém
-        ctx.strokeStyle = "rgba(255,255,255,0.3)";
-        ctx.lineWidth = 1;
-        
-        if (this.isPlayer) {
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = this.color;
-            ctx.strokeStyle = "white";
-            ctx.lineWidth = 3;
+        if (this.type === 'warp') {
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = "#00fbff"; ctx.fill();
+            ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x, this.y - this.r + 4);
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x + this.r - 5, this.y);
+            ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.stroke();
+        } else {
+            if (this.isPlayer) {
+                if (damageCooldown > 0 && Math.floor(Date.now() / 100) % 2 === 0) ctx.globalAlpha = 0.2;
+                let displayRadius = this.r + Math.sin(this.pulse) * 5;
+                if (this.pulse > 0) this.pulse -= 0.2;
+                ctx.shadowBlur = 20 + (this.pulse * 2); ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, displayRadius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.stroke();
+                ctx.fill();
+                this.rings.forEach((ring, index) => {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, ring.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(${ring.rgb}, ${ring.opacity})`;
+                    ctx.lineWidth = 2; ctx.stroke();
+                    ring.r += 2; ring.opacity -= 0.02;
+                    if (ring.opacity <= 0) this.rings.splice(index, 1);
+                });
+                if (shieldTime > 0) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.r + 15, 0, Math.PI * 2);
+                    let opacity = (shieldTime > 800) ? 0.5 : (Math.floor(Date.now() / 100) % 2 === 0 ? 0.8 : 0.1);
+                    ctx.strokeStyle = (shieldTime < 1000) ? `rgba(255, 50, 50, ${opacity})` : `rgba(0, 212, 255, ${opacity})`;
+                    ctx.lineWidth = 4; ctx.stroke();
+                }
+            } else {
+                ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
         }
-        
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
         ctx.restore();
     }
 
     update() {
         if (!this.isPlayer) {
-            this.x += this.vx;
-            this.y += this.vy;
+            let factor = (slowMoTime > 0) ? 0.3 : 1;
+            const margin = 50;
+            const force = 0.05;
+            if (this.x < margin) this.vx += force;
+            if (this.x > canvas.width - margin) this.vx -= force;
+            if (this.y < margin) this.vy += force;
+            if (this.y > canvas.height - margin) this.vy -= force;
+
+            this.x += this.vx * factor; 
+            this.y += this.vy * factor;
+
             if (this.x - this.r < 0 || this.x + this.r > canvas.width) this.vx *= -1;
             if (this.y - this.r < 0 || this.y + this.r > canvas.height) this.vy *= -1;
         } else {
@@ -147,88 +248,122 @@ class Dot {
     }
 }
 
+function hexToRgb(hex) {
+    let r = parseInt(hex.slice(1, 3), 16);
+    let g = parseInt(hex.slice(3, 5), 16);
+    let b = parseInt(hex.slice(5, 7), 16);
+    return `${r},${g},${b}`;
+}
+
 function startLevel() {
-    dots = [];
-    const count = 70 + (level * 20);
+    dots = []; timeWarps = [];
+    shieldTime = 3000; slowMoTime = 0; lastCountValue = 0; damageCooldown = 0;
+    levelEl.innerText = level;
     
-    // Vždy vytvořit nového hráče při startu/restartu, aby měl správnou velikost
-    if (!mouse.dot || gameState === 'over') {
-        mouse.dot = new Dot(mouse.x, mouse.y, 12, colors[Math.floor(Math.random() * colors.length)], true);
+    if (!mouse.dot || lives <= 0) {
+        lives = 3;
+        mouse.dot = new Dot(mouse.x, mouse.y, 12, selectedColor, true);
     }
     
-    targetColorDisp.style.backgroundColor = mouse.dot.color;
-
-    for (let i = 0; i < count; i++) {
-        const r = 8;
-        const x = Math.random() * (canvas.width - r * 2) + r;
-        const y = Math.random() * (canvas.height - r * 2) + r;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        
-        // Nestartovat nepřátele na hráči
-        if(Math.hypot(x - mouse.x, y - mouse.y) < 80) { i--; continue; }
-        dots.push(new Dot(x, y, r, color));
+    livesEl.innerText = "❤️".repeat(lives);
+    for (let i = 0; i < level; i++) spawnDot(mouse.dot.color);
+    let enemyCount = 15 + (level <= 10 ? level : 10 + (level-10)*2);
+    for (let i = 0; i < enemyCount; i++) {
+        let c; do { c = colors[Math.floor(Math.random()*colors.length)]; } while(c === mouse.dot.color);
+        spawnDot(c);
     }
-    updateRemaining();
+    document.getElementById('remainVal').innerText = level;
 }
 
-function updateRemaining() {
-    const remaining = dots.filter(d => d.color === mouse.dot.color).length;
-    remainEl.innerText = remaining;
-    if (remaining === 0 && gameState === 'playing') levelComplete();
+function spawnDot(color) {
+    const r = 8;
+    let x, y;
+    do { x = Math.random()*canvas.width; y = Math.random()*canvas.height; } 
+    while (Math.hypot(x - mouse.x, y - mouse.y) < 200);
+    dots.push(new Dot(x, y, r, color));
 }
 
-function levelComplete() {
-    gameState = 'waiting';
-    level++;
-    document.body.classList.remove('ingame');
-    document.getElementById('title').innerText = "LEVEL HOTOV!";
-    document.getElementById('desc').innerText = `Skvělá práce! Jdeme na Level ${level}.`;
-    startBtn.innerText = "DALŠÍ LEVEL";
-    overlay.classList.remove('hidden');
-}
+function animate(timestamp) {
+    let deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
 
-function gameOver() {
-    gameState = 'over';
-    document.body.classList.remove('ingame');
-    document.getElementById('title').innerText = "KONEC HRY";
-    document.getElementById('desc').innerText = `Narazil jsi do jiné barvy. Skóre: ${score}`;
-    startBtn.innerText = "Zkusit znovu";
-    overlay.classList.remove('hidden');
-    
-    // Data se resetují až při stisku tlačítka Start, aby hráč viděl skóre
-}
-
-function animate() {
-    // Čištění s mírným průhledným efektem pro "ocásky"
-    ctx.fillStyle = 'rgba(5, 5, 5, 0.4)';
+    ctx.fillStyle = (slowMoTime > 0) ? 'rgba(0, 20, 40, 0.4)' : 'rgba(5, 5, 5, 0.4)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === 'playing') {
+        if (shieldTime > 0) {
+            shieldTime -= deltaTime;
+            let val = Math.ceil(shieldTime / 1000);
+            if (val !== lastCountValue && val > 0) {
+                countdownEl.innerText = val;
+                countdownEl.classList.remove('animate-count');
+                void countdownEl.offsetWidth; countdownEl.classList.add('animate-count');
+                lastCountValue = val;
+            }
+        }
+        if (slowMoTime > 0) slowMoTime -= deltaTime;
+        if (damageCooldown > 0) damageCooldown -= deltaTime;
+
+        if (timestamp - lastWarpSpawn > 15000) {
+            timeWarps.push(new Dot(Math.random()*canvas.width, Math.random()*canvas.height, 12, "#00fbff", false, "warp"));
+            lastWarpSpawn = timestamp;
+        }
+
         mouse.dot.update();
+
+        for (let i = 0; i < timeWarps.length; i++) {
+            timeWarps[i].update();
+            if (Math.hypot(mouse.x - timeWarps[i].x, mouse.y - timeWarps[i].y) < mouse.dot.r + timeWarps[i].r) {
+                slowMoTime = 3000;
+                timeWarps.splice(i, 1); i--;
+            }
+        }
 
         for (let i = 0; i < dots.length; i++) {
             dots[i].update();
-
             const dist = Math.hypot(mouse.dot.x - dots[i].x, mouse.dot.y - dots[i].y);
             
-            if (dist < mouse.dot.r + dots[i].r) {
+            if (shieldTime > 0 && dist < mouse.dot.r + dots[i].r + 15) {
+                let angle = Math.atan2(dots[i].y - mouse.dot.y, dots[i].x - mouse.dot.x);
+                dots[i].vx = Math.cos(angle) * 4; dots[i].vy = Math.sin(angle) * 4;
+                continue;
+            }
+
+            if (shieldTime <= 0 && dist < mouse.dot.r + dots[i].r) {
                 if (mouse.dot.color === dots[i].color) {
-                    mouse.dot.r += 1.3;
-                    score += 10;
-                    scoreEl.innerText = score;
-                    dots.splice(i, 1);
-                    updateRemaining();
-                    i--;
-                } else {
-                    gameOver();
-                    return; 
+                    if (damageCooldown <= 0) {
+                        mouse.dot.pulse = 5;
+                        mouse.dot.rings.push({ r: mouse.dot.r, opacity: 1, rgb: hexToRgb(dots[i].color) });
+                        mouse.dot.r += 1.5; score += 10 * level;
+                        document.getElementById('scoreVal').innerText = score;
+                        dots.splice(i, 1);
+                        const rem = dots.filter(d => d.color === mouse.dot.color).length;
+                        document.getElementById('remainVal').innerText = rem;
+                        if (rem === 0) {
+                            gameState = 'waiting'; level++;
+                            document.getElementById('title').innerText = "LEVEL HOTOV!";
+                            pickerWrapper.classList.add('hidden'); // Skryj výběr při postupu
+                            startBtn.innerText = "START LEVEL " + level;
+                            overlay.classList.remove('hidden');
+                            document.body.classList.remove('ingame');
+                        }
+                        i--;
+                    }
+                } else if (damageCooldown <= 0) {
+                    lives--; mouse.dot.r *= 0.85; damageCooldown = 2000;
+                    livesEl.innerText = "❤️".repeat(lives);
+                    if (lives <= 0) {
+                        gameState = 'over'; 
+                        document.getElementById('title').innerText = "KONEC CESTY";
+                        pickerWrapper.classList.remove('hidden'); // Znovu ukaž výběr po smrti
+                        startBtn.innerText = "ZNOVU";
+                        overlay.classList.remove('hidden');
+                        document.body.classList.remove('ingame');
+                        level = 1; score = 0; mouse.dot = null;
+                        return;
+                    }
                 }
             }
-        }
-        
-        if (mouse.dot.r > 55) {
-            mouse.dot.r = 12;
-            score += 150;
         }
     }
     animationId = requestAnimationFrame(animate);
@@ -236,35 +371,16 @@ function animate() {
 
 startBtn.addEventListener('click', () => {
     if (animationId) cancelAnimationFrame(animationId);
-    
-    // Pokud klikáme po GameOver, resetujeme level a skóre
-    if (gameState === 'over') {
-        level = 1;
-        score = 0;
-        mouse.dot = null;
-    }
-
     gameState = 'playing';
     overlay.classList.add('hidden');
     document.body.classList.add('ingame');
-    
-    levelEl.innerText = level;
-    scoreEl.innerText = score;
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Úplný reset plátna
     startLevel();
-    animate();
+    lastTime = performance.now(); lastWarpSpawn = performance.now();
+    animate(lastTime);
 });
 
-window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-});
-
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 </script>
 </body>
 </html>

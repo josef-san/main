@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Dot Survivor: Visible Dots Fix</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Arial', sans-serif; cursor: default; }
+        body.ingame { cursor: none; }
+        canvas { display: block; }
+        
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            font-size: 18px;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            border: 3px solid #555;
+            min-width: 320px;
+            z-index: 20;
+        }
+
+        button {
+            background: #00d4ff;
+            border: none;
+            padding: 15px 40px;
+            color: #000;
+            font-weight: bold;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.1s;
+        }
+
+        button:hover { transform: scale(1.05); background: #fff; }
+        .hidden { display: none !important; }
+        .highlight { color: #00d4ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div>Level: <span id="levelVal" class="highlight">1</span></div>
+    <div>Zbývá tvých: <span id="remainVal" class="highlight">0</span></div>
+    <div>Skóre: <span id="scoreVal">0</span></div>
+</div>
+
+<div id="overlay">
+    <h1 id="title">DOT SURVIVOR</h1>
+    <p id="desc">Sbírej tečky své barvy, vyhýbej se ostatním!</p>
+    <div style="margin: 20px 0;">
+        Tvoje barva: <span id="targetColor" style="display:inline-block; width:22px; height:22px; border-radius:50%; vertical-align:middle; border:2px solid white;"></span>
+    </div>
+    <button id="startBtn">START HRY</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('scoreVal');
+const levelEl = document.getElementById('levelVal');
+const remainEl = document.getElementById('remainVal');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+const targetColorDisp = document.getElementById('targetColor');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// OPRAVENÉ POLE BAREV - žádné textové názvy ani černé tóny
+const colors = ['#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FFFF33'];
+let dots = [];
+let score = 0;
+let level = 1;
+let gameState = 'waiting'; 
+let animationId;
+
+const mouse = { x: canvas.width/2, y: canvas.height/2, dot: null };
+
+class Dot {
+    constructor(x, y, r, color, isPlayer = false) {
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.color = color;
+        // Rychlost
+        let speedMult = 1.5 + (level * 0.3);
+        this.vx = (Math.random() - 0.5) * speedMult;
+        this.vy = (Math.random() - 0.5) * speedMult;
+        this.isPlayer = isPlayer;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        
+        // Tenký obal pro všechny tečky, aby byly vidět i na tmavém
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.lineWidth = 1;
+        
+        if (this.isPlayer) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = this.color;
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 3;
+        }
+        
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+        ctx.restore();
+    }
+
+    update() {
+        if (!this.isPlayer) {
+            this.x += this.vx;
+            this.y += this.vy;
+            if (this.x - this.r < 0 || this.x + this.r > canvas.width) this.vx *= -1;
+            if (this.y - this.r < 0 || this.y + this.r > canvas.height) this.vy *= -1;
+        } else {
+            this.x = mouse.x;
+            this.y = mouse.y;
+        }
+        this.draw();
+    }
+}
+
+function startLevel() {
+    dots = [];
+    const count = 70 + (level * 20);
+    
+    // Vždy vytvořit nového hráče při startu/restartu, aby měl správnou velikost
+    if (!mouse.dot || gameState === 'over') {
+        mouse.dot = new Dot(mouse.x, mouse.y, 12, colors[Math.floor(Math.random() * colors.length)], true);
+    }
+    
+    targetColorDisp.style.backgroundColor = mouse.dot.color;
+
+    for (let i = 0; i < count; i++) {
+        const r = 8;
+        const x = Math.random() * (canvas.width - r * 2) + r;
+        const y = Math.random() * (canvas.height - r * 2) + r;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Nestartovat nepřátele na hráči
+        if(Math.hypot(x - mouse.x, y - mouse.y) < 80) { i--; continue; }
+        dots.push(new Dot(x, y, r, color));
+    }
+    updateRemaining();
+}
+
+function updateRemaining() {
+    const remaining = dots.filter(d => d.color === mouse.dot.color).length;
+    remainEl.innerText = remaining;
+    if (remaining === 0 && gameState === 'playing') levelComplete();
+}
+
+function levelComplete() {
+    gameState = 'waiting';
+    level++;
+    document.body.classList.remove('ingame');
+    document.getElementById('title').innerText = "LEVEL HOTOV!";
+    document.getElementById('desc').innerText = `Skvělá práce! Jdeme na Level ${level}.`;
+    startBtn.innerText = "DALŠÍ LEVEL";
+    overlay.classList.remove('hidden');
+}
+
+function gameOver() {
+    gameState = 'over';
+    document.body.classList.remove('ingame');
+    document.getElementById('title').innerText = "KONEC HRY";
+    document.getElementById('desc').innerText = `Narazil jsi do jiné barvy. Skóre: ${score}`;
+    startBtn.innerText = "Zkusit znovu";
+    overlay.classList.remove('hidden');
+    
+    // Data se resetují až při stisku tlačítka Start, aby hráč viděl skóre
+}
+
+function animate() {
+    // Čištění s mírným průhledným efektem pro "ocásky"
+    ctx.fillStyle = 'rgba(5, 5, 5, 0.4)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === 'playing') {
+        mouse.dot.update();
+
+        for (let i = 0; i < dots.length; i++) {
+            dots[i].update();
+
+            const dist = Math.hypot(mouse.dot.x - dots[i].x, mouse.dot.y - dots[i].y);
+            
+            if (dist < mouse.dot.r + dots[i].r) {
+                if (mouse.dot.color === dots[i].color) {
+                    mouse.dot.r += 1.3;
+                    score += 10;
+                    scoreEl.innerText = score;
+                    dots.splice(i, 1);
+                    updateRemaining();
+                    i--;
+                } else {
+                    gameOver();
+                    return; 
+                }
+            }
+        }
+        
+        if (mouse.dot.r > 55) {
+            mouse.dot.r = 12;
+            score += 150;
+        }
+    }
+    animationId = requestAnimationFrame(animate);
+}
+
+startBtn.addEventListener('click', () => {
+    if (animationId) cancelAnimationFrame(animationId);
+    
+    // Pokud klikáme po GameOver, resetujeme level a skóre
+    if (gameState === 'over') {
+        level = 1;
+        score = 0;
+        mouse.dot = null;
+    }
+
+    gameState = 'playing';
+    overlay.classList.add('hidden');
+    document.body.classList.add('ingame');
+    
+    levelEl.innerText = level;
+    scoreEl.innerText = score;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Úplný reset plátna
+    startLevel();
+    animate();
+});
+
+window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>

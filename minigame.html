@@ -234,6 +234,15 @@
 <canvas id="canvas"></canvas>
 
 <script>
+    /* Copyright (c) 2026 Josef Ložek - alias Pepunk. 
+   Unauthorized copying of this file is strictly prohibited. 
+*/
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === "I") || (e.ctrlKey && e.key === "u")) {
+        e.preventDefault();
+    }
+});    
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
@@ -590,3 +599,4 @@ window.addEventListener('resize', () => { canvas.width = window.innerWidth; canv
 </script>
 </body>
 </html>
+

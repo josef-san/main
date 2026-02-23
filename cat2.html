@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktivní kočka</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f8f8;
+            font-family: sans-serif;
+        }
+
+        .cat-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            user-select: none;
+        }
+
+        /* Bílá podkladová vrstva pro oči */
+        .eye-background {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 50%;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        #eye-bg-left { top: 212px; left: 155px; }
+        #eye-bg-right { top: 212px; left: 275px; }
+
+        .pupil {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            background: black;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Samotný obrázek kočky s průhlednými otvory */
+        .cat-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none; /* Aby šlo hýbat myší i "přes" kočku */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="cat-container">
+        <div id="eye-bg-left" class="eye-background">
+            <div class="pupil"></div>
+        </div>
+        <div id="eye-bg-right" class="eye-background">
+            <div class="pupil"></div>
+        </div>
+
+        <img src="https://i.postimg.cc/JzwktHbJ/transparent-Gemini-Generated-Image-ovtehovtehovteho.png" alt="Kočka" class="cat-overlay">
+    </div>
+
+    <script>
+        const pupils = document.querySelectorAll('.pupil');
+
+        document.addEventListener('mousemove', (e) => {
+            pupils.forEach(pupil => {
+                const rect = pupil.parentElement.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+                const distance = 14; // Dosah pohybu zorničky
+
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+
+                pupil.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+            });
+        });
+    </script>
+</body>
+</html>

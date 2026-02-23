@@ -58,6 +58,35 @@
             z-index: 30;
         }
 
+        /* Nové prvky pro jméno a leaderboard */
+        #nameInput {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: white;
+            padding: 10px;
+            font-size: 18px;
+            width: 80%;
+            margin: 10px 0;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        #leaderboard {
+            display: none;
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .lb-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            font-family: monospace;
+        }
+
+        .lb-header { font-weight: bold; color: #00d4ff; border-bottom: 2px solid #00d4ff; }
+
         #countdown {
             position: absolute;
             top: 50%;
@@ -81,16 +110,17 @@
         button {
             background: #00d4ff;
             border: none;
-            padding: 15px 40px;
+            padding: 12px 30px;
             color: black;
             font-weight: bold;
-            font-size: 20px;
+            font-size: 18px;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s;
+            margin: 5px;
+            transition: transform 0.2s, background 0.2s;
         }
-        button:hover { transform: scale(1.05); }
+        button:hover { transform: scale(1.05); background: #00fbff; }
+        button.secondary { background: #555; color: white; }
 
         .legend {
             background: rgba(255, 255, 255, 0.05);
@@ -160,31 +190,45 @@
 <div id="countdown"></div>
 
 <div id="overlay">
-    <h1 id="title">TIME WARP SURVIVOR</h1>
-    
-    <div id="warpAlert" class="hidden">⚡ WARP CHARGE UNLOCKED! ⚡<br>Every 3 dots trigger an automatic Time Warp!</div>
+    <div id="mainMenu">
+        <h1 id="title">TIME WARP SURVIVOR</h1>
+        
+        <div id="warpAlert" class="hidden">⚡ WARP CHARGE UNLOCKED! ⚡<br>Every 3 dots trigger an automatic Time Warp!</div>
 
-    <div class="legend" id="legendBox">
-        <div class="legend-item">
-            <div class="dot-preview" style="background: white; border: 3px solid #00d4ff;"></div>
-            <span><strong>YOU:</strong> Absorb dots of your color to grow and level up.</span>
+        <div id="setupBox">
+            <input type="text" id="nameInput" placeholder="ENTER YOUR NAME" maxlength="12">
+            
+            <div class="legend" id="legendBox">
+                <div class="legend-item">
+                    <div class="dot-preview" style="background: white; border: 3px solid #00d4ff;"></div>
+                    <span><strong>YOU:</strong> Absorb dots of your color to grow and level up.</span>
+                </div>
+                <div class="legend-item">
+                    <div class="dot-preview warp-preview"></div>
+                    <span><strong>TIME WARP:</strong> Slows down all enemies. (Auto-triggers after 3 dots)</span>
+                </div>
+            </div>
+            
+            <div class="color-selector-wrapper" id="pickerWrapper">
+                <p>Choose your starting color:</p>
+                <div class="color-selector" id="colorPicker"></div>
+            </div>
         </div>
-        <div class="legend-item">
-            <div class="dot-preview warp-preview"></div>
-            <span><strong>TIME WARP:</strong> Slows down all enemies. (Auto-triggers after 3 dots)</span>
-        </div>
-        <div class="legend-item">
-            <div class="dot-preview" style="background: #ff4d4d;"></div>
-            <span><strong>ENEMIES:</strong> Different colors shrink you and cost lives.</span>
-        </div>
-    </div>
-    
-    <div class="color-selector-wrapper" id="pickerWrapper">
-        <p>Choose your starting color:</p>
-        <div class="color-selector" id="colorPicker"></div>
+
+        <button id="startBtn">START GAME</button>
+        <button id="lbBtn" class="secondary">LEADERBOARD</button>
     </div>
 
-    <button id="startBtn">START GAME</button>
+    <div id="leaderboard">
+        <h2>TOP 10 SURVIVORS</h2>
+        <div class="lb-row lb-header">
+            <span>NAME</span>
+            <span>LVL</span>
+            <span>SCORE</span>
+        </div>
+        <div id="lbContent"></div>
+        <button id="backBtn" class="secondary" style="margin-top: 20px;">BACK</button>
+    </div>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -194,6 +238,13 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const overlay = document.getElementById('overlay');
 const startBtn = document.getElementById('startBtn');
+const lbBtn = document.getElementById('lbBtn');
+const backBtn = document.getElementById('backBtn');
+const mainMenu = document.getElementById('mainMenu');
+const leaderboard = document.getElementById('leaderboard');
+const lbContent = document.getElementById('lbContent');
+const nameInput = document.getElementById('nameInput');
+
 const countdownEl = document.getElementById('countdown');
 const livesEl = document.getElementById('livesVal');
 const levelEl = document.getElementById('levelVal');
@@ -226,6 +277,38 @@ let history = [];
 
 const mouse = { x: canvas.width/2, y: canvas.height/2, dot: null };
 
+// --- LOGIKA LEADERBOARDU ---
+function saveScore(name, finalScore, finalLevel) {
+    let scores = JSON.parse(localStorage.getItem('dotSurvivorScores')) || [];
+    scores.push({ name: name || "Anonymous", score: finalScore, level: finalLevel });
+    scores.sort((a, b) => b.score - a.score);
+    scores = scores.slice(0, 10);
+    localStorage.setItem('dotSurvivorScores', JSON.stringify(scores));
+}
+
+function updateLeaderboardUI() {
+    const scores = JSON.parse(localStorage.getItem('dotSurvivorScores')) || [];
+    lbContent.innerHTML = scores.map(s => `
+        <div class="lb-row">
+            <span>${s.name}</span>
+            <span>${s.level}</span>
+            <span>${s.score}</span>
+        </div>
+    `).join('') || '<div style="text-align:center; padding: 20px;">No scores yet!</div>';
+}
+
+lbBtn.onclick = () => {
+    mainMenu.classList.add('hidden');
+    leaderboard.style.display = 'block';
+    updateLeaderboardUI();
+};
+
+backBtn.onclick = () => {
+    leaderboard.style.display = 'none';
+    mainMenu.classList.remove('hidden');
+};
+
+// --- PŮVODNÍ TŘÍDY A FUNKCE ---
 class Popup {
     constructor(x, y, text, color) {
         this.x = x; this.y = y; this.text = text; this.color = color;
@@ -367,7 +450,6 @@ function startLevel() {
     levelEl.innerText = level;
 
     warpAlertEl.classList.add('hidden');
-    // WARP NASTAVENÍ: od levelu 9
     if (level >= 9) {
         warpProgressEl.classList.remove('hidden');
         warpCountEl.innerText = "0";
@@ -431,14 +513,12 @@ function animate(timestamp) {
                     if (damageCooldown <= 0) {
                         mouse.dot.pulse = 5;
                         mouse.dot.rings.push({ r: mouse.dot.r, opacity: 1, rgb: hexToRgb(dots[i].color) });
-                        // ZMENŠENÝ RŮST: na 0.5
                         mouse.dot.r += 0.5; 
                         score += 10 * level;
                         document.getElementById('scoreVal').innerText = score;
                         dots.splice(i, 1);
                         collectedInLevel++;
 
-                        // WARP LOGIKA: od levelu 9
                         if (level >= 9) {
                             let progress = collectedInLevel % 3;
                             if (progress === 0) progress = 3; 
@@ -460,10 +540,9 @@ function animate(timestamp) {
                         if (rem === 0) {
                             gameState = 'waiting'; level++;
                             document.getElementById('title').innerText = "LEVEL COMPLETE!";
-                            // OZNÁMENÍ WARPU: při přechodu na level 9
                             if (level === 9) warpAlertEl.classList.remove('hidden');
-                            pickerWrapper.classList.add('hidden');
-                            legendBox.classList.add('hidden');
+                            document.getElementById('setupBox').classList.add('hidden');
+                            lbBtn.classList.add('hidden'); // Skrýt leaderboard během postupu levely
                             startBtn.innerText = "START LEVEL " + level;
                             overlay.classList.remove('hidden');
                             document.body.classList.remove('ingame');
@@ -478,9 +557,10 @@ function animate(timestamp) {
                     livesEl.innerText = "❤️".repeat(lives);
                     if (lives <= 0) {
                         gameState = 'over'; 
+                        saveScore(nameInput.value, score, level); // Uložit výsledek
                         document.getElementById('title').innerText = "GAME OVER";
-                        pickerWrapper.classList.remove('hidden');
-                        legendBox.classList.remove('hidden');
+                        document.getElementById('setupBox').classList.remove('hidden');
+                        lbBtn.classList.remove('hidden');
                         startBtn.innerText = "RETRY";
                         overlay.classList.remove('hidden');
                         document.body.classList.remove('ingame');

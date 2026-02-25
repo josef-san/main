@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORE - Final Layout</title>
+    <style>
+        :root {
+            --neon-pink: #ff00ff;
+            --neon-blue: #00f3ff;
+            --neon-yellow: #fefe33;
+            --bg-dark: #020205;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* --- BACKGROUND --- */
+        .ambient-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: radial-gradient(circle at center, #1a1a2e 0%, #020205 100%); z-index: 1; }
+        #ps-background { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 2; }
+        .ps-icon-wrapper { position: absolute; will-change: transform; }
+        .ps-icon { color: rgba(255, 255, 255, 0.12); font-weight: 900; animation: wind-drift 20s linear infinite; }
+        @keyframes wind-drift { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(400px, 150px) rotate(45deg); } }
+
+        /* --- HERO (CORE) - NEDOTČENO --- */
+        .parallax-container { position: relative; width: 100%; height: 100vh; display: flex; justify-content: center; align-items: center; z-index: 10; overflow: hidden; }
+        #hero { position: relative; z-index: 15; text-align: center; pointer-events: none; }
+        h1 { font-size: clamp(3rem, 15vw, 6rem); margin: 0; letter-spacing: clamp(5px, 2vw, 15px); text-shadow: 0 0 30px var(--neon-pink); }
+        .shape { position: absolute; mix-blend-mode: screen; filter: blur(1px) drop-shadow(0 0 25px currentColor); opacity: 0.8; will-change: transform; }
+        .circle { width: clamp(200px, 40vw, 350px); height: clamp(200px, 40vw, 350px); border: 15px solid var(--neon-pink); border-radius: 50%; color: var(--neon-pink); top: 50%; left: 50%; transform: translate(-80%, -70%); animation: core-float 10s ease-in-out infinite; }
+        .square { width: clamp(180px, 35vw, 300px); height: clamp(180px, 35vw, 300px); border: 12px solid var(--neon-blue); color: var(--neon-blue); top: 50%; left: 50%; transform: translate(-20%, -30%) rotate(15deg); animation: core-float 12s ease-in-out infinite reverse; }
+        .triangle { width: 0; height: 0; border-left: clamp(100px, 20vw, 200px) solid transparent; border-right: clamp(100px, 20vw, 200px) solid transparent; border-bottom: clamp(170px, 35vw, 340px) solid var(--neon-yellow); color: var(--neon-yellow); top: 50%; left: 50%; transform: translate(-60%, -50%); opacity: 0.6; animation: core-float 15s ease-in-out infinite 1s; }
+        @keyframes core-float { 0%, 100% { margin-top: 0px; } 50% { margin-top: -25px; } }
+
+        /* --- O NÁS --- */
+        .section-about { min-height: 75vh; width: 100%; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(8px); border-top: 1px solid rgba(0, 243, 255, 0.3); border-bottom: 1px solid rgba(255, 0, 255, 0.3); display: flex; align-items: center; justify-content: center; gap: 50px; position: relative; z-index: 20; overflow: hidden; flex-wrap: wrap; padding: 40px; box-sizing: border-box; }
+        .about-heading { font-size: clamp(2.5rem, 10vw, 5rem); color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue); transform: translateX(-150%); transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1); margin: 0; }
+        .about-body { max-width: 450px; font-size: 1.1rem; line-height: 1.6; color: #fff; transform: translateX(150%); transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .section-about.revealed .about-heading, .section-about.revealed .about-body { transform: translateX(0); }
+
+        /* --- CAROUSEL --- */
+        .section-deck { width: 100%; min-height: 60vh; display: flex; justify-content: center; align-items: center; position: relative; z-index: 25; padding: 50px 0; }
+        .deck-container { position: relative; width: 100%; max-width: 1000px; height: 500px; display: flex; justify-content: center; align-items: flex-end; }
+        .deck-card { position: absolute; width: 260px; height: 400px; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(15px); border: 2px solid var(--neon-blue); border-radius: 15px; padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; text-align: center; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 -5px 20px rgba(0,0,0,0.8); cursor: pointer; transform-origin: center bottom; }
+        .deck-card:nth-child(even) { border-color: var(--neon-pink); }
+        @media (min-width: 1025px) {
+            .deck-card:nth-child(1) { transform: translateX(-320px) rotate(-12deg); z-index: 1; }
+            .deck-card:nth-child(2) { transform: translateX(-160px) rotate(-6deg); z-index: 2; }
+            .deck-card:nth-child(3) { transform: translateX(0) rotate(0deg); z-index: 3; }
+            .deck-card:nth-child(4) { transform: translateX(160px) rotate(6deg); z-index: 2; }
+            .deck-card:nth-child(5) { transform: translateX(320px) rotate(12deg); z-index: 1; }
+            .deck-card:hover { z-index: 50 !important; transform: translateX(var(--hover-x, 0)) translateY(-150px) rotate(0deg) scale(1.05) !important; box-shadow: 0 0 40px var(--neon-blue); }
+            .deck-card:nth-child(1):hover { --hover-x: -320px; } .deck-card:nth-child(2):hover { --hover-x: -160px; } .deck-card:nth-child(3):hover { --hover-x: 0px; } .deck-card:nth-child(4):hover { --hover-x: 160px; } .deck-card:nth-child(5):hover { --hover-x: 320px; }
+        }
+        @media (max-width: 1024px) {
+            .deck-container { flex-direction: column; height: auto; align-items: center; gap: 20px; position: static; }
+            .deck-card { position: relative !important; transform: none !important; width: 90% !important; max-width: 320px; height: auto !important; min-height: 200px; }
+            .deck-card p { opacity: 1; }
+        }
+
+        /* --- CONTENT BLOCKS --- */
+        .section-content-blocks { width: 100%; padding: 100px 0; z-index: 20; position: relative; display: flex; flex-direction: column; gap: 100px; box-sizing: border-box; }
+        .content-block { display: flex; align-items: center; justify-content: center; max-width: 1200px; margin: 0 auto; gap: 60px; padding: 0 20px; box-sizing: border-box; width: 100%; }
+        .content-block.reverse { flex-direction: row-reverse; }
+        .block-image { flex: 0 0 400px; height: 300px; border-radius: 20px; overflow: hidden; border: 2px solid var(--neon-blue); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
+        .content-block.reverse .block-image { border-color: var(--neon-pink); }
+        .block-image img { width: 100%; height: 100%; object-fit: cover; }
+        .block-text { flex: 1; max-width: 500px; }
+        .block-text h3 { font-size: clamp(1.8rem, 5vw, 2.5rem); color: var(--neon-blue); margin-bottom: 15px; }
+        @media (max-width: 900px) { .content-block, .content-block.reverse { flex-direction: column; text-align: center; gap: 30px; } .block-image { flex: 0 0 auto; width: 100%; max-width: 400px; height: 250px; } .block-text { max-width: 100%; } }
+
+        /* --- FORMULÁŘ --- */
+        .section-contact { 
+            width: 100%; 
+            padding: 100px 0; 
+            margin-bottom: 120px; /* Zvětšená mezera mezi formulářem a mapou */
+            position: relative; 
+            z-index: 30; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            box-sizing: border-box; 
+        }
+        .contact-container { width: 90%; max-width: 600px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); padding: 40px; border-radius: 20px; border: 1px solid rgba(0, 243, 255, 0.3); box-shadow: 0 0 30px rgba(0, 0, 0, 0.5); box-sizing: border-box; }
+        .contact-container h2 { text-align: center; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); margin-bottom: 30px; font-size: 2rem; }
+        .form-group { margin-bottom: 20px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border-radius: 8px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); color: white; font-family: 'Orbitron', sans-serif; box-sizing: border-box; }
+        .btn-submit { width: 100%; padding: 15px; border: 2px solid var(--neon-pink); background: transparent; color: var(--neon-pink); font-family: 'Orbitron', sans-serif; font-weight: bold; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-submit:hover { background: var(--neon-pink); color: white; box-shadow: 0 0 20px var(--neon-pink); }
+
+        /* --- MAPA (VYŠŠÍ & BEZ MEZER) --- */
+        .section-map {
+            width: 100vw;
+            height: 650px; /* Zvýšena výška mapy */
+            position: relative;
+            z-index: 30;
+            border-top: 2px solid var(--neon-blue);
+            filter: grayscale(1) invert(0.9) hue-rotate(180deg);
+            margin: 0;
+            padding: 0;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+        .section-map iframe { width: 100%; height: 100%; border: 0; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow"></div>
+    <div id="ps-background"></div>
+
+    <section class="parallax-container">
+        <div class="shape triangle" data-speed="0.04"></div>
+        <div class="shape circle" data-speed="-0.05"></div>
+        <div class="shape square" data-speed="0.08"></div>
+        <div id="hero"><h1>CORE</h1></div>
+    </section>
+
+    <section class="section-about" id="trigger">
+        <h2 class="about-heading">O NÁS</h2>
+        <div class="about-body">Jsme digitální architekti z roku 2026. Naše systémy nejsou jen kód, jsou to živé organismy v kyberprostoru.</div>
+    </section>
+
+    <section class="section-deck">
+        <div class="deck-container">
+            <div class="deck-card"><div class="card-icon">✕</div><h3>KREATIVITA</h3><p>Boříme standardy a tvoříme nové digitální světy.</p></div>
+            <div class="deck-card"><div class="card-icon">○</div><h3>ANALÝZA</h3><p>Každý pixel má svůj účel. Rozumíme datům.</p></div>
+            <div class="deck-card"><div class="card-icon">△</div><h3>RYCHLOST</h3><p>Optimalizace v jádru. Reakce v reálném čase.</p></div>
+            <div class="deck-card"><div class="card-icon">□</div><h3>VIZE</h3><p>Nedíváme se na dnešek, ale na to, co přijde.</p></div>
+            <div class="deck-card"><div class="card-icon">◇</div><h3>JÁDRO</h3><p>Stabilita tvoří srdce každé naší aplikace.</p></div>
+        </div>
+    </section>
+
+    <section class="section-content-blocks">
+        <div class="content-block">
+            <div class="block-image"><img src="https://via.placeholder.com/400x300/00f3ff/000000?text=IMAGE+1" alt=""></div>
+            <div class="block-text"><h3>BUDOUCNOST</h3><p>Vytváříme systémy, které rostou s vámi. Naše technologie jsou navrženy pro maximální škálovatelnost.</p></div>
+        </div>
+        <div class="content-block reverse">
+            <div class="block-image"><img src="https://via.placeholder.com/400x300/ff00ff/000000?text=IMAGE+2" alt=""></div>
+            <div class="block-text"><h3>DESIGN</h3><p>Estetika se potkává s funkcí. Každé rozhraní je navrženo pro intuitivní a plynulý zážitek.</p></div>
+        </div>
+    </section>
+
+    <section class="section-contact">
+        <div class="contact-container">
+            <h2>SPOJTE SE S NÁMI</h2>
+            <form id="contact-form">
+                <div class="form-group"><input type="text" placeholder="JMÉNO / ALIAS" required></div>
+                <div class="form-group"><input type="email" placeholder="EMAIL" required></div>
+                <div class="form-group"><textarea rows="4" placeholder="VAŠE VIZE..." required></textarea></div>
+                <button type="submit" class="btn-submit">ODESLAT DOTAZ</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="section-map">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2559.8491845184283!2d14.410141677332766!3d50.08819441331776!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b94e82352fd8b%3A0x2863920c7847775!2zS2FybMWvdiBtb3N0!5e0!3m2!1scs!2scz!4v1700000000000" loading="lazy"></iframe>
+    </section>
+
+    <script>
+        const psContainer = document.getElementById('ps-background');
+        const icons = ['✕', '○', '△', '□'];
+        const iconWrappers = [];
+        for (let i = 0; i < (window.innerWidth < 768 ? 30 : 60); i++) {
+            const w = document.createElement('div');
+            w.className = 'ps-icon-wrapper';
+            w.style.left = (Math.random() * 100) + '%';
+            w.style.top = (Math.random() * 100) + '%';
+            const icon = document.createElement('div');
+            icon.className = 'ps-icon';
+            icon.innerText = icons[Math.floor(Math.random() * icons.length)];
+            icon.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            w.setAttribute('data-speed', (Math.random() * 0.03 + 0.01));
+            w.appendChild(icon);
+            psContainer.appendChild(w);
+            iconWrappers.push(w);
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            if (window.innerWidth < 1024) return;
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            iconWrappers.forEach(el => {
+                const s = parseFloat(el.getAttribute('data-speed'));
+                el.style.transform = `translate(${(centerX - e.clientX) * s}px, ${(centerY - e.clientY) * s}px)`;
+            });
+            document.querySelectorAll('.shape').forEach(shape => {
+                const s = parseFloat(shape.getAttribute('data-speed'));
+                const moveX = (centerX - e.clientX) * s;
+                const moveY = (centerY - e.clientY) * s;
+                const rot = shape.classList.contains('square') ? 'rotate(15deg)' : '';
+                if (shape.classList.contains('circle')) shape.style.transform = `translate(calc(-80% + ${moveX}px), calc(-70% + ${moveY}px)) ${rot}`;
+                if (shape.classList.contains('square')) shape.style.transform = `translate(calc(-20% + ${moveX}px), calc(-30% + ${moveY}px)) ${rot}`;
+                if (shape.classList.contains('triangle')) shape.style.transform = `translate(calc(-60% + ${moveX}px), calc(-50% + ${moveY}px)) ${rot}`;
+            });
+        });
+
+        const about = document.getElementById('trigger');
+        window.addEventListener('scroll', () => {
+            if (about && about.getBoundingClientRect().top < window.innerHeight * 0.8) {
+                about.classList.add('revealed');
+            }
+        });
+    </script>
+</body>
+</html>

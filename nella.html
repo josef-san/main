@@ -19,8 +19,8 @@
         /* --- POSTAVA --- */
         #player {
             position: absolute;
-            bottom: 100px; /* POSUNUTO VÝŠE PRO MOBILY */
-            left: 50px;
+            bottom: 100px;
+            left: 10px; /* POSUNUTO ÚPLNĚ DOLEVA PRO VÍCE ČASU NA REAKCI */
             width: 120px;
             height: 143px;
             z-index: 10;
@@ -70,7 +70,7 @@
         /* OBJEKTY */
         .item { 
             position: absolute; 
-            bottom: 100px; /* POSUNUTO VÝŠE, ABY SEDĚLO K POSTAVĚ */
+            bottom: 100px; 
             font-size: 40px; 
         }
         .obstacle { 
@@ -145,7 +145,7 @@
     const container = document.getElementById('game-container');
 
     let score = 0;
-    let posY = 100; // ZÁKLADNÍ VÝŠKA POSUNUTA NA 100
+    let posY = 100; 
     let velY = 0;
     let isJumping = false;
     let gravity = 0.8;
@@ -210,7 +210,7 @@
         if (isJumping) {
             posY += velY;
             velY -= gravity;
-            if (posY <= 100) { // DOPAD NA NOVOU VÝŠKU 100
+            if (posY <= 100) {
                 posY = 100;
                 isJumping = false;
             }

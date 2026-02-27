@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nelly Go!</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background: #222; font-family: sans-serif; overflow: hidden; touch-action: manipulation; }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(#87CEEB, #E0C097);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- POSTAVA --- */
+        #player {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            width: 120px;
+            height: 143px;
+            z-index: 10;
+        }
+
+        #telo-img {
+            width: 120px;
+            position: absolute;
+            bottom: 0;
+            z-index: 11;
+        }
+
+        #head-img {
+            width: 37px;
+            position: absolute;
+            top: 11px;
+            left: 41px;
+            z-index: 12;
+            transform-origin: bottom center;
+        }
+
+        .talking #head-img {
+            animation: flap 0.3s infinite;
+        }
+
+        @keyframes flap {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-25deg) translateY(-5px); }
+        }
+
+        #speech-bubble {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            border: 2px solid #000;
+            display: none;
+            z-index: 20;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap; /* Aby se text nezalamoval */
+        }
+
+        /* OBJEKTY */
+        .item { position: absolute; bottom: 50px; font-size: 40px; }
+        .obstacle { 
+            width: 30px; height: 45px; 
+            background: #ff0000; border: 2px solid white; 
+            border-radius: 5px; box-shadow: 0 0 10px red;
+        }
+
+        /* UI VRSTVY */
+        #score-ui {
+            position: absolute;
+            top: 15px; left: 15px;
+            color: white; font-size: 20px; text-shadow: 2px 2px 2px #000;
+            z-index: 50;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; z-index: 100;
+            text-align: center;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 24px;
+            cursor: pointer;
+            background: #4CAF50;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 4px 0 #2e6b31;
+        }
+
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #2e6b31; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="score-ui">Skóre: <span id="score">0</span></div>
+
+    <div id="start-screen" class="screen">
+        <h1>NELLY GO! 🏃‍♀️</h1>
+        <p>Sbírej 💩 a vyhýbej se červeným blokům.</p>
+        <button onclick="startGame()">START</button>
+    </div>
+
+    <div id="game-over" class="screen" style="display: none;">
+        <h1>KONEC HRY! 💀</h1>
+        <p id="final-score"></p>
+        <button onclick="location.reload()">HRÁT ZNOVU</button>
+    </div>
+
+    <div id="player">
+        <div id="speech-bubble">Mňam bobek !</div>
+        <img src="hlava.png" id="head-img" alt="hlava">
+        <img src="telo.png" id="telo-img" alt="telo">
+    </div>
+</div>
+
+<script>
+    const player = document.getElementById('player');
+    const bubble = document.getElementById('speech-bubble');
+    const scoreElement = document.getElementById('score');
+    const startScreen = document.getElementById('start-screen');
+    const gameOverScreen = document.getElementById('game-over');
+    const container = document.getElementById('game-container');
+
+    let score = 0;
+    let posY = 50;
+    let velY = 0;
+    let isJumping = false;
+    let gravity = 0.8;
+    let gameActive = false;
+    let gameObjects = [];
+    let speed = 6;
+
+    // Tvoje hlášky
+    const hlasky = [
+        "Mňam bobek !",
+        "Co budeme dělat ?",
+        "Já nevim.",
+        "Jsem bobek.",
+        "Vynikající bobek.",
+        "Ne.",
+        "Nechci.",
+        "A proč ?",
+        "Tesík.",
+        "Dala bych si víc bobků.",
+        "Jim bobky, mňam."
+    ];
+
+    window.addEventListener('keydown', (e) => { if(e.key === 'ArrowUp' || e.key === ' ') handleJump(); });
+    window.addEventListener('touchstart', (e) => { if(gameActive) handleJump(); });
+    container.addEventListener('mousedown', (e) => { if(gameActive) handleJump(); });
+
+    function handleJump() {
+        if (!isJumping && gameActive) {
+            isJumping = true;
+            velY = 16;
+        }
+    }
+
+    function startGame() {
+        startScreen.style.display = 'none';
+        gameActive = true;
+        spawnLoop();
+        gameLoop();
+    }
+
+    function spawnLoop() {
+        if (!gameActive) return;
+        const isObs = Math.random() > 0.6;
+        const obj = document.createElement('div');
+        obj.className = isObs ? 'item obstacle' : 'item poop';
+        obj.innerHTML = isObs ? '' : '💩';
+        obj.style.left = window.innerWidth + 'px';
+        container.appendChild(obj);
+
+        gameObjects.push({
+            el: obj,
+            x: window.innerWidth,
+            type: isObs ? 'obs' : 'poop'
+        });
+
+        let nextSpawn = 1000 + Math.random() * 2000 - (score * 10);
+        setTimeout(spawnLoop, Math.max(nextSpawn, 600));
+    }
+
+    function gameLoop() {
+        if (!gameActive) return;
+
+        if (isJumping) {
+            posY += velY;
+            velY -= gravity;
+            if (posY <= 50) {
+                posY = 50;
+                isJumping = false;
+            }
+        }
+        player.style.bottom = posY + 'px';
+
+        for (let i = gameObjects.length - 1; i >= 0; i--) {
+            let o = gameObjects[i];
+            o.x -= (speed + (score * 0.1));
+            o.el.style.left = o.x + 'px';
+
+            let pRect = player.getBoundingClientRect();
+            let oRect = o.el.getBoundingClientRect();
+
+            if (pRect.left + 15 < oRect.right && pRect.right - 15 > oRect.left &&
+                pRect.top + 15 < oRect.bottom && pRect.bottom - 15 > oRect.top) {
+                
+                if (o.type === 'poop') {
+                    score++;
+                    scoreElement.innerText = score;
+                    o.el.remove();
+                    gameObjects.splice(i, 1);
+                    saySomething();
+                } else {
+                    die();
+                }
+            }
+
+            if (o.x < -100) {
+                o.el.remove();
+                gameObjects.splice(i, 1);
+            }
+        }
+        requestAnimationFrame(gameLoop);
+    }
+
+    function saySomething() {
+        // Vybere náhodnou hlášku ze seznamu
+        const nahodnyIndex = Math.floor(Math.random() * hlasky.length);
+        bubble.innerText = hlasky[nahodnyIndex];
+        
+        bubble.style.display = 'block';
+        player.classList.add('talking');
+        setTimeout(() => {
+            bubble.style.display = 'none';
+            player.classList.remove('talking');
+        }, 1000);
+    }
+
+    function die() {
+        gameActive = false;
+        document.getElementById('final-score').innerText = "Tvé skóre: " + score;
+        gameOverScreen.style.display = 'flex';
+    }
+</script>
+</body>
+</html>

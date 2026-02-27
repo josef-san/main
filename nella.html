@@ -24,7 +24,6 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* POZADÍ S HOVÍNKY */
         #emoji-bg-grid {
             position: absolute;
             top: 0;
@@ -39,17 +38,12 @@
             position: absolute;
             font-size: 80px;
             opacity: 0.3; 
-            /* Animace diagonálního pohybu přes celou obrazovku */
             animation: diagonalMove 12s linear infinite;
         }
 
         @keyframes diagonalMove {
-            0% {
-                transform: translate(-150px, -150px) rotate(0deg);
-            }
-            100% {
-                transform: translate(120vw, 120vh) rotate(720deg);
-            }
+            0% { transform: translate(-150px, -150px) rotate(0deg); }
+            100% { transform: translate(120vw, 120vh) rotate(720deg); }
         }
 
         /* --- POSTAVA --- */
@@ -149,11 +143,13 @@
 
     <div id="start-screen" class="screen">
         <h1>NELLY GO! 🏃‍♀️</h1>
+        <p>Musíš sebrat VŠECHNY bobky!</p>
         <button onclick="startGame()">START</button>
     </div>
 
     <div id="game-over" class="screen" style="display: none;">
         <h1>KONEC HRY! 💀</h1>
+        <p id="death-reason"></p>
         <p id="final-score"></p>
         <button onclick="location.reload()">HRÁT ZNOVU</button>
     </div>
@@ -172,6 +168,7 @@
     const startScreen = document.getElementById('start-screen');
     const gameOverScreen = document.getElementById('game-over');
     const container = document.getElementById('game-container');
+    const deathReasonText = document.getElementById('death-reason');
 
     let score = 0;
     let posY = 100; 
@@ -182,7 +179,12 @@
     let gameObjects = [];
     let speed = 6;
 
-    const hlasky = ["Mňam bobek !", "Co budeme dělat ?", "Já nevim.", "Jsem bobek.", "Vynikající bobek.", "Ne.", "Nechci.", "A proč ?", "Tesík.", "Dala bych si víc bobků.", "Jim bobky, mňam."];
+    const hlasky = [
+        "Mňam bobek !", "Co budeme dělat ?", 
+        "Já nevim.", "Co budeme dělat ?", "Já nevim.", 
+        "Jsem bobek.", "Vynikající bobek.", "Ne.", "Nechci.", 
+        "A proč ?", "Tesík.", "A proč ?", "Jim bobky, mňam."
+    ];
 
     window.addEventListener('keydown', (e) => { if(e.key === 'ArrowUp' || e.key === ' ') handleJump(); });
     window.addEventListener('touchstart', (e) => { if(gameActive) handleJump(); });
@@ -200,7 +202,7 @@
         gameActive = true;
         spawnLoop();
         gameLoop();
-        createBgPoops(); // Vytvoří hovínka hned po startu
+        createBgPoops();
     }
 
     function spawnLoop() {
@@ -228,6 +230,7 @@
             let o = gameObjects[i];
             o.x -= (speed + (score * 0.1));
             o.el.style.left = o.x + 'px';
+            
             let pRect = player.getBoundingClientRect();
             let oRect = o.el.getBoundingClientRect();
 
@@ -239,9 +242,18 @@
                     o.el.remove();
                     gameObjects.splice(i, 1);
                     saySomething();
-                } else { die(); }
+                } else { 
+                    die("Narazila jsi do překážky!"); 
+                }
             }
-            if (o.x < -100) { o.el.remove(); gameObjects.splice(i, 1); }
+
+            if (o.x < -50) {
+                if (o.type === 'poop') {
+                    die("Nesebrala jsi bobek! 💩");
+                }
+                o.el.remove();
+                gameObjects.splice(i, 1);
+            }
         }
         requestAnimationFrame(gameLoop);
     }
@@ -253,10 +265,11 @@
         setTimeout(() => { bubble.style.display = 'none'; player.classList.remove('talking'); }, 1000);
     }
 
-    function die() {
+    function die(reason) {
         gameActive = false;
-        gameOverScreen.style.display = 'flex';
+        deathReasonText.innerText = reason;
         document.getElementById('final-score').innerText = "Tvé skóre: " + score;
+        gameOverScreen.style.display = 'flex';
     }
 
     function createBgPoops() {
@@ -265,10 +278,8 @@
             const p = document.createElement('div');
             p.className = 'grid-poop';
             p.innerText = '💩';
-            // Náhodná pozice kdekoli na obrazovce
             p.style.left = Math.random() * 100 + "vw";
             p.style.top = Math.random() * 100 + "vh";
-            // Záporný delay zajistí, že animace už "běží" v různých fázích hned po startu
             p.style.animationDelay = (Math.random() * -12) + "s";
             grid.appendChild(p);
         }

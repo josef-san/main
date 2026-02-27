@@ -19,7 +19,7 @@
         /* --- POSTAVA --- */
         #player {
             position: absolute;
-            bottom: 50px;
+            bottom: 100px; /* POSUNUTO VÝŠE PRO MOBILY */
             left: 50px;
             width: 120px;
             height: 143px;
@@ -64,11 +64,15 @@
             z-index: 20;
             font-size: 14px;
             font-weight: bold;
-            white-space: nowrap; /* Aby se text nezalamoval */
+            white-space: nowrap;
         }
 
         /* OBJEKTY */
-        .item { position: absolute; bottom: 50px; font-size: 40px; }
+        .item { 
+            position: absolute; 
+            bottom: 100px; /* POSUNUTO VÝŠE, ABY SEDĚLO K POSTAVĚ */
+            font-size: 40px; 
+        }
         .obstacle { 
             width: 30px; height: 45px; 
             background: #ff0000; border: 2px solid white; 
@@ -141,7 +145,7 @@
     const container = document.getElementById('game-container');
 
     let score = 0;
-    let posY = 50;
+    let posY = 100; // ZÁKLADNÍ VÝŠKA POSUNUTA NA 100
     let velY = 0;
     let isJumping = false;
     let gravity = 0.8;
@@ -149,7 +153,6 @@
     let gameObjects = [];
     let speed = 6;
 
-    // Tvoje hlášky
     const hlasky = [
         "Mňam bobek !",
         "Co budeme dělat ?",
@@ -207,8 +210,8 @@
         if (isJumping) {
             posY += velY;
             velY -= gravity;
-            if (posY <= 50) {
-                posY = 50;
+            if (posY <= 100) { // DOPAD NA NOVOU VÝŠKU 100
+                posY = 100;
                 isJumping = false;
             }
         }
@@ -245,10 +248,8 @@
     }
 
     function saySomething() {
-        // Vybere náhodnou hlášku ze seznamu
         const nahodnyIndex = Math.floor(Math.random() * hlasky.length);
         bubble.innerText = hlasky[nahodnyIndex];
-        
         bubble.style.display = 'block';
         player.classList.add('talking');
         setTimeout(() => {

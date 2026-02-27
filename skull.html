@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BONE - Mega Pixel Chaos</title>
+    <title>BONE - Fixed Sync Speed</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
@@ -15,7 +15,6 @@
             min-height: 100vh;
             margin: 0;
             overflow: hidden;
-            /* Zelená mříž */
             background-image: 
                 linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
@@ -39,7 +38,6 @@
             justify-content: center;
             gap: 5vw;
             z-index: 10;
-            width: 100%;
         }
 
         .letter {
@@ -67,21 +65,9 @@
             flex-shrink: 0;
         }
 
-        #skull-top {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            height: auto;
-        }
-
-        #skull-jaw {
-            position: absolute;
-            top: 75%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 65%;
-            z-index: 1;
-        }
+        #skull-top, #skull-jaw { width: 100%; height: auto; }
+        #skull-top { position: relative; z-index: 10; }
+        #skull-jaw { position: absolute; top: 75%; left: 50%; transform: translateX(-50%); width: 65%; z-index: 1; }
 
         #smoke-container {
             position: absolute;
@@ -89,7 +75,7 @@
             left: 50%;
             transform: translateX(-50%);
             width: 80%;
-            z-index: 1;
+            z-index: 11;
             pointer-events: none;
         }
 
@@ -128,18 +114,18 @@
     <div id="background-pixels"></div>
 
     <div class="logo-container">
-        <span class="letter" id="letter-B">B</span>
+        <span class="letter">B</span>
         <div class="skull-wrapper" id="main-skull">
-            <img src="horni_cast.png" id="skull-top" alt="Horní část">
+            <img src="horni_cast.png" id="skull-top">
             <div id="smoke-container"></div>
-            <img src="celist.png" id="skull-jaw" alt="Čelist">
+            <img src="celist.png" id="skull-jaw">
         </div>
-        <span class="letter" id="letter-N">N</span>
-        <span class="letter" id="letter-E">E</span>
+        <span class="letter">N</span>
+        <span class="letter">E</span>
     </div>
 
     <script>
-        // --- INTERAKCE KLIKNUTÍ ---
+        // --- INTERAKCE ---
         const skullBtn = document.getElementById('main-skull');
         const letters = document.querySelectorAll('.letter');
         let isTextVisible = false;
@@ -148,83 +134,89 @@
             isTextVisible = !isTextVisible;
             letters.forEach((l, index) => {
                 setTimeout(() => {
-                    if (isTextVisible) l.classList.add('visible');
-                    else l.classList.remove('visible');
+                    l.classList.toggle('visible', isTextVisible);
                 }, index * 100);
             });
         });
 
-        // --- OBŘÍ PADAJÍCÍ KOSTKY ---
+        // --- PADAJÍCÍ KOSTKY ---
         const bgPixelsContainer = document.getElementById('background-pixels');
         function createBackgroundPixel() {
             const pixel = document.createElement('div');
             pixel.style.position = 'absolute';
-            
-            const maxBaseSize = window.innerWidth < 600 ? 35 : 65;
-            const size = Math.random() * maxBaseSize + 5; 
-            pixel.style.width = size + 'px';
-            pixel.style.height = size + 'px';
-            
+            const size = Math.random() * (window.innerWidth < 600 ? 35 : 65) + 5; 
+            pixel.style.width = pixel.style.height = size + 'px';
             pixel.style.left = Math.random() * 100 + 'vw';
             pixel.style.top = '-100px';
             pixel.style.backgroundColor = ['#4df052', '#86ff8a', '#0a2b0c', '#ffffff'][Math.floor(Math.random() * 4)];
             pixel.style.opacity = '0.3';
-            
             const drift = (Math.random() - 0.5) * (window.innerWidth * 0.5) + 'px';
             const rotation = Math.random() * 720 + 'deg';
             pixel.style.setProperty('--drift', drift);
             pixel.style.setProperty('--rot', rotation);
-            
             const duration = Math.random() * 5 + 4;
             pixel.style.animation = `pixelChaosFall ${duration}s linear forwards`;
-            
             bgPixelsContainer.appendChild(pixel);
             setTimeout(() => pixel.remove(), duration * 1000);
         }
-        setInterval(createBackgroundPixel, 180);
+        setInterval(createBackgroundPixel, 200);
 
-        // --- ANIMACE LEBKY (Původní nastavení) ---
+        // --- OPRAVENÁ ANIMACE (TIME-BASED) ---
         const jaw = document.getElementById('skull-jaw');
         const topPart = document.getElementById('skull-top');
         const smokeContainer = document.getElementById('smoke-container');
-        let angle = 0, cycleCount = 0, hasExhaledThisCycle = false;
+        
+        let angle = 0;
+        let cycleCount = 0;
+        let hasExhaledThisCycle = false;
+        let lastTime = 0;
 
         function createPixel(isExplosion = false) {
             const pixel = document.createElement('div');
             pixel.classList.add('pixel-fragment');
             const size = isExplosion ? (Math.random() * 20 + 5) : (Math.random() * 10 + 4);
-            pixel.style.width = `${size}px`;
-            pixel.style.height = `${size}px`;
+            pixel.style.width = pixel.style.height = `${size}px`;
             const duration = isExplosion ? (Math.random() * 0.6 + 0.8) : (Math.random() * 1.8 + 1.2);
             pixel.style.animation = `${isExplosion ? 'glitchEruption' : 'glitchFloat'} ${duration}s steps(20, end) forwards`;
             const randX = (Math.random() - 0.5) * (isExplosion ? 340 : 120);
             pixel.style.setProperty('--rand-x', randX);
-            const colors = isExplosion ? ['#5fff66', '#ffffff', '#bdff00'] : ['#4df052', '#86ff8a', '#00ff41'];
-            pixel.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            pixel.style.backgroundColor = isExplosion ? ['#5fff66', '#ffffff', '#bdff00'][Math.floor(Math.random()*3)] : ['#4df052', '#86ff8a', '#00ff41'][Math.floor(Math.random()*3)];
             pixel.style.zIndex = "11";
             smokeContainer.appendChild(pixel);
             setTimeout(() => pixel.remove(), duration * 1000);
         }
 
-        setInterval(() => createPixel(false), 100);
+        setInterval(() => createPixel(false), 120);
 
-        function animate() {
+        function animate(currentTime) {
+            if (!lastTime) lastTime = currentTime;
+            const deltaTime = (currentTime - lastTime) / 16.66; // Normalizace na 60 FPS
+            lastTime = currentTime;
+
             let prevSin = Math.sin(angle);
-            angle += 0.0090; // Tvá rychlost
+            // Původní hodnota 0.0090 se teď násobí deltaTime pro srovnání rychlosti
+            angle += 0.05 * deltaTime; 
             let currentSin = Math.sin(angle);
-            if (prevSin > 0 && currentSin <= 0) { cycleCount++; hasExhaledThisCycle = false; }
+
+            if (prevSin > 0 && currentSin <= 0) {
+                cycleCount++;
+                hasExhaledThisCycle = false;
+            }
+
             if (cycleCount % 2 === 0 && currentSin > 0.7 && !hasExhaledThisCycle) {
                 for (let i = 0; i < 55; i++) setTimeout(() => createPixel(true), i * 7);
                 hasExhaledThisCycle = true;
             }
-            const moveJaw = (currentSin + 1) * 2; // Tvůj rozsah
+
+            const moveJaw = (currentSin + 1) * 2; 
             jaw.style.transform = `translateX(-50%) translateY(${moveJaw}px)`;
             topPart.style.transform = `translateY(${currentSin * -3}px)`;
             smokeContainer.style.transform = `translateX(-50%) translateY(${moveJaw * 0.7}px)`;
+
             requestAnimationFrame(animate);
         }
 
-        animate();
+        requestAnimationFrame(animate);
     </script>
 </body>
 </html>

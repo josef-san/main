@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BONE - Mega Pixel Chaos</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+        body {
+            background-color: #0a0f0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            /* Zelená mříž */
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: 'Permanent Marker', cursive;
+        }
+
+        #background-pixels {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; 
+            pointer-events: none;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5vw;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .letter {
+            color: #5fff66;
+            font-size: clamp(60px, 15vw, 180px);
+            text-shadow: 4px 4px 0px #0a2b0c;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
+        }
+
+        .letter.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .skull-wrapper {
+            position: relative;
+            width: clamp(80px, 20vw, 180px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #skull-top {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: auto;
+        }
+
+        #skull-jaw {
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 65%;
+            z-index: 1;
+        }
+
+        #smoke-container {
+            position: absolute;
+            top: 82%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .pixel-fragment {
+            position: absolute;
+            border-radius: 0; 
+            opacity: 0;
+            left: 50%;
+            box-shadow: 0 0 8px rgba(95, 255, 102, 0.6);
+            border: 1px solid #0a2b0c;
+        }
+
+        @keyframes pixelChaosFall {
+            0% { transform: translate(0, -20vh) rotate(0deg); opacity: 0; }
+            15% { opacity: 0.3; }
+            85% { opacity: 0.3; }
+            100% { transform: translate(var(--drift), 120vh) rotate(var(--rot)); opacity: 0; }
+        }
+
+        @keyframes glitchFloat {
+            0% { transform: translate(-50%, 20px) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate(calc(-50% + var(--rand-x) * 1px), -100px) scale(1.5); opacity: 0; }
+        }
+
+        @keyframes glitchEruption {
+            0% { transform: translate(-50%, 20px) scale(0); opacity: 0; }
+            15% { opacity: 1; filter: brightness(1.5); }
+            30% { transform: translate(calc(-50% + var(--rand-x) * 1.4px), 30px) scale(2); }
+            100% { transform: translate(calc(-50% + var(--rand-x) * 1.8px), -500px) scale(0.2); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="background-pixels"></div>
+
+    <div class="logo-container">
+        <span class="letter" id="letter-B">B</span>
+        <div class="skull-wrapper" id="main-skull">
+            <img src="horni_cast.png" id="skull-top" alt="Horní část">
+            <div id="smoke-container"></div>
+            <img src="celist.png" id="skull-jaw" alt="Čelist">
+        </div>
+        <span class="letter" id="letter-N">N</span>
+        <span class="letter" id="letter-E">E</span>
+    </div>
+
+    <script>
+        // --- INTERAKCE KLIKNUTÍ ---
+        const skullBtn = document.getElementById('main-skull');
+        const letters = document.querySelectorAll('.letter');
+        let isTextVisible = false;
+
+        skullBtn.addEventListener('click', () => {
+            isTextVisible = !isTextVisible;
+            letters.forEach((l, index) => {
+                setTimeout(() => {
+                    if (isTextVisible) l.classList.add('visible');
+                    else l.classList.remove('visible');
+                }, index * 100);
+            });
+        });
+
+        // --- OBŘÍ PADAJÍCÍ KOSTKY ---
+        const bgPixelsContainer = document.getElementById('background-pixels');
+        function createBackgroundPixel() {
+            const pixel = document.createElement('div');
+            pixel.style.position = 'absolute';
+            
+            const maxBaseSize = window.innerWidth < 600 ? 35 : 65;
+            const size = Math.random() * maxBaseSize + 5; 
+            pixel.style.width = size + 'px';
+            pixel.style.height = size + 'px';
+            
+            pixel.style.left = Math.random() * 100 + 'vw';
+            pixel.style.top = '-100px';
+            pixel.style.backgroundColor = ['#4df052', '#86ff8a', '#0a2b0c', '#ffffff'][Math.floor(Math.random() * 4)];
+            pixel.style.opacity = '0.3';
+            
+            const drift = (Math.random() - 0.5) * (window.innerWidth * 0.5) + 'px';
+            const rotation = Math.random() * 720 + 'deg';
+            pixel.style.setProperty('--drift', drift);
+            pixel.style.setProperty('--rot', rotation);
+            
+            const duration = Math.random() * 5 + 4;
+            pixel.style.animation = `pixelChaosFall ${duration}s linear forwards`;
+            
+            bgPixelsContainer.appendChild(pixel);
+            setTimeout(() => pixel.remove(), duration * 1000);
+        }
+        setInterval(createBackgroundPixel, 180);
+
+        // --- ANIMACE LEBKY (Původní nastavení) ---
+        const jaw = document.getElementById('skull-jaw');
+        const topPart = document.getElementById('skull-top');
+        const smokeContainer = document.getElementById('smoke-container');
+        let angle = 0, cycleCount = 0, hasExhaledThisCycle = false;
+
+        function createPixel(isExplosion = false) {
+            const pixel = document.createElement('div');
+            pixel.classList.add('pixel-fragment');
+            const size = isExplosion ? (Math.random() * 20 + 5) : (Math.random() * 10 + 4);
+            pixel.style.width = `${size}px`;
+            pixel.style.height = `${size}px`;
+            const duration = isExplosion ? (Math.random() * 0.6 + 0.8) : (Math.random() * 1.8 + 1.2);
+            pixel.style.animation = `${isExplosion ? 'glitchEruption' : 'glitchFloat'} ${duration}s steps(20, end) forwards`;
+            const randX = (Math.random() - 0.5) * (isExplosion ? 340 : 120);
+            pixel.style.setProperty('--rand-x', randX);
+            const colors = isExplosion ? ['#5fff66', '#ffffff', '#bdff00'] : ['#4df052', '#86ff8a', '#00ff41'];
+            pixel.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            pixel.style.zIndex = "11";
+            smokeContainer.appendChild(pixel);
+            setTimeout(() => pixel.remove(), duration * 1000);
+        }
+
+        setInterval(() => createPixel(false), 100);
+
+        function animate() {
+            let prevSin = Math.sin(angle);
+            angle += 0.0090; // Tvá rychlost
+            let currentSin = Math.sin(angle);
+            if (prevSin > 0 && currentSin <= 0) { cycleCount++; hasExhaledThisCycle = false; }
+            if (cycleCount % 2 === 0 && currentSin > 0.7 && !hasExhaledThisCycle) {
+                for (let i = 0; i < 55; i++) setTimeout(() => createPixel(true), i * 7);
+                hasExhaledThisCycle = true;
+            }
+            const moveJaw = (currentSin + 1) * 2; // Tvůj rozsah
+            jaw.style.transform = `translateX(-50%) translateY(${moveJaw}px)`;
+            topPart.style.transform = `translateY(${currentSin * -3}px)`;
+            smokeContainer.style.transform = `translateX(-50%) translateY(${moveJaw * 0.7}px)`;
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
